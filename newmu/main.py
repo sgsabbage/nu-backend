@@ -31,6 +31,7 @@ app.add_middleware(
 
 app.include_router(api.router)
 
+
 @app.on_event("startup")
 async def broadcast_connect() -> None:
     await broadcast.connect()
@@ -50,20 +51,25 @@ def root(request: Request):
 
 
 @app.post("/")
-async def root_post(request: Request,
-                    player: Player = Depends(get_player),
-                    session: AsyncSession = Depends(get_session)):
+async def root_post(
+    request: Request,
+    player: Player = Depends(get_player),
+    session: AsyncSession = Depends(get_session),
+):
     loaders = get_loaders(session)
     async with session.begin():
         return await GraphQLApp(
             schema,
-            context_value={"loaders": loaders, "session": session, "player": player}
+            context_value={"loaders": loaders, "session": session, "player": player},
         )._handle_http_request(request)
 
 
 @app.websocket("/")
-async def root_ws(ws: WebSocket,
-                    player: Player = Depends(get_player), session: AsyncSession = Depends(get_session)):
+async def root_ws(
+    ws: WebSocket,
+    player: Player = Depends(get_player),
+    session: AsyncSession = Depends(get_session),
+):
     loaders = get_loaders(session)
 
     if player is None:
@@ -71,7 +77,9 @@ async def root_ws(ws: WebSocket,
         await ws.close(4001)
         return
 
-    await GraphQLApp(schema,  context_value={"loaders": loaders, "session": session, "player": player})._run_websocket_server(ws)
+    await GraphQLApp(
+        schema, context_value={"loaders": loaders, "session": session, "player": player}
+    )._run_websocket_server(ws)
 
 
 def start() -> None:
@@ -84,6 +92,7 @@ def start() -> None:
         log_level="warning",
         debug=True,
     )
+
 
 if __name__ == "__main__":
     start()

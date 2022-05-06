@@ -42,7 +42,7 @@ init_db = "newmu.db:init_db"
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = [
-    "app/tests"
+    "newmu/test"
 ]
 
 [tool.isort]
