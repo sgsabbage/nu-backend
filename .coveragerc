@@ -1,0 +1,11 @@
+[run]
+branch = True
+source = .
+omit = *test*
+
+[report]
+show_missing = True
+omit = *test*
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
