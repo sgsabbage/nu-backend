@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING, List
+from uuid import UUID as PythonUUID
 
-from sqlalchemy import Column, ForeignKey, String, Integer
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import PasswordType, force_auto_coercion
+
 from newmu.db.base_class import Base
-from uuid import UUID as PythonUUID
 
 if TYPE_CHECKING:
     from newmu.models.channel import Channel, ChannelCharacter

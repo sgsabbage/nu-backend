@@ -14,14 +14,14 @@ class DBDataLoader(DataLoader):
 class CharacterLoader(DBDataLoader):
     async def batch_load_fn(self, keys):
         async def test_fn():
-            result = await self.session.execute(select(Character).filter(Character.id.in_(keys)))
+            result = await self.session.execute(
+                select(Character).filter(Character.id.in_(keys))
+            )
             chars = result.scalars().all()
             return [next((c for c in chars if c.id == k), None) for k in keys]
+
         return await test_fn()
 
 
 def get_loaders(session: AsyncSession):
-    return {
-        "char_loader": CharacterLoader(session=session)
-    }
-
+    return {"char_loader": CharacterLoader(session=session)}

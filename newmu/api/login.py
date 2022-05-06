@@ -15,6 +15,7 @@ from newmu.models import Player
 
 router = APIRouter()
 
+
 class LoginSchema(BaseModel):
     username: str
     password: str

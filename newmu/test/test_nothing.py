@@ -1,4 +1,6 @@
 def test_is_this_true() -> None:
+    from newmu.api import login
+
     assert True
 
 

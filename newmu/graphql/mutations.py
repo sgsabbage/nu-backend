@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import graphene
 from graphql import GraphQLError
 from sqlalchemy import select
@@ -6,14 +8,13 @@ from sqlalchemy.orm import selectinload
 
 from newmu import models
 from newmu.graphql import types
-from datetime import datetime
-
 from newmu.models import PlayerWindowSetting
 
 
 class WindowSettingInput(graphene.InputObjectType):
     key = graphene.String(required=True)
     value = graphene.String(required=True)
+
 
 class UpdateWindowInput(graphene.InputObjectType):
     id = graphene.UUID(required=True)
@@ -27,6 +28,7 @@ class UpdateWindowInput(graphene.InputObjectType):
 
     z = graphene.Int()
 
+
 class UpdateWindow(graphene.Mutation):
     class Arguments:
         input = UpdateWindowInput(required=True)
@@ -38,7 +40,9 @@ class UpdateWindow(graphene.Mutation):
         session = info.context["session"]
         try:
             result = await session.execute(
-                select(models.PlayerWindow).filter(models.PlayerWindow.id == input.id).options(selectinload(models.PlayerWindow.settings))
+                select(models.PlayerWindow)
+                .filter(models.PlayerWindow.id == input.id)
+                .options(selectinload(models.PlayerWindow.settings))
             )
             window = result.scalar_one()
         except (InvalidRequestError, StatementError) as e:
@@ -47,7 +51,9 @@ class UpdateWindow(graphene.Mutation):
         if input.character_id:
             try:
                 character = await session.execute(
-                    select(models.Character).filter(models.Character.id == input.character_id)
+                    select(models.Character).filter(
+                        models.Character.id == input.character_id
+                    )
                 )
                 window.character = character.scalar_one()
             except (InvalidRequestError, StatementError) as e:
@@ -58,7 +64,9 @@ class UpdateWindow(graphene.Mutation):
         if input.settings is not None:
             settings = []
             for setting in input.settings:
-                new_setting = PlayerWindowSetting(key=setting["key"], value=setting["value"], window=window)
+                new_setting = PlayerWindowSetting(
+                    key=setting["key"], value=setting["value"], window=window
+                )
                 session.add(new_setting)
                 settings.append(new_setting)
             window.settings = settings
@@ -93,6 +101,7 @@ class SendChannelMessageInput(graphene.InputObjectType):
     character_id = graphene.UUID(required=True)
     message = graphene.String(required=True)
 
+
 class SendChannelMessage(graphene.Mutation):
     class Arguments:
         input = SendChannelMessageInput(required=True)
@@ -106,7 +115,7 @@ class SendChannelMessage(graphene.Mutation):
             channel_id=input.id,
             character_id=input.character_id,
             message=input.message,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
         session.add(cm)
         await session.flush()
@@ -134,7 +143,7 @@ class OpenWindow(graphene.Mutation):
     async def mutate(root, info, input: OpenWindowInput):
         session = info.context["session"]
         w = models.PlayerWindow(
-            name = input.component,
+            name=input.component,
             component=input.component,
             z=input.z,
             width=input.width,
@@ -142,7 +151,7 @@ class OpenWindow(graphene.Mutation):
             top=input.top,
             left=input.left,
             player_id=info.context["player"].id,
-            character_id=input.character_id
+            character_id=input.character_id,
         )
         session.add(w)
         await session.flush()

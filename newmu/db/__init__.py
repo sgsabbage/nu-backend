@@ -4,9 +4,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from ..core.config import settings
-from ..models import Channel, ChannelCharacter, ChannelMessage, Character, Player, Area, Room, Exit
-from .base_class import metadata
+from ..models import (
+    Area,
+    Channel,
+    ChannelCharacter,
+    ChannelMessage,
+    Character,
+    Exit,
+    Player,
+    Room,
+)
 from ..models.player import PlayerWindow
+from .base_class import metadata
 
 
 def init_db() -> None:

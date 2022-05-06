@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
+from uuid import UUID as PythonUUID
 
 from graphene import relay
 from sqlalchemy import Boolean, Column, ForeignKey, String
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
-from uuid import UUID as PythonUUID
 from sqlalchemy.orm import relationship
 
 from newmu.db.base_class import Base

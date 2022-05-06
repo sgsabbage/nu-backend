@@ -3,7 +3,7 @@ from typing import Any
 
 from sqlalchemy import Column, MetaData
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import as_declarative, declared_attr, DeclarativeMeta
+from sqlalchemy.orm import as_declarative, declared_attr
 from sqlalchemy.sql.expression import text
 
 convention = {

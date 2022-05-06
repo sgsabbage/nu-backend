@@ -1,12 +1,21 @@
 {
     "python.testing.pytestArgs": [
+        "--cov",
+        "--cov-report",
+        "html:coverage/html",
+        "--cov-report",
+        "xml:cov.xml",
         "newmu/test"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.formatting.provider": "black",
     "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": true,
-    "python.linting.mypyEnabled": true
+    "python.linting.mypyEnabled": true,
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
+    }
 }

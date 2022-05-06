@@ -1,9 +1,9 @@
 import graphene
 from sqlalchemy import select
 
-from newmu.graphql import types
-from newmu.broadcast import broadcast
 from newmu import models
+from newmu.broadcast import broadcast
+from newmu.graphql import types
 
 
 class Subscription(graphene.ObjectType):

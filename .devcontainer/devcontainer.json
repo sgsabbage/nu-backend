@@ -14,6 +14,7 @@
 	"extensions": [
 		"ms-python.python",
 		"ms-python.vscode-pylance",
-		"ckolkman.vscode-postgres"
+		"ckolkman.vscode-postgres",
+		"ryanluker.vscode-coverage-gutters"
 	]
 }

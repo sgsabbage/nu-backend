@@ -1,9 +1,8 @@
-from dateutil import parser
-
 import graphene
-from graphene import relay, PageInfo
+from dateutil import parser
+from graphene import PageInfo, relay
 from graphql import GraphQLError
-from sqlalchemy import select, desc, func
+from sqlalchemy import desc, func, select
 
 import newmu.models as models
 

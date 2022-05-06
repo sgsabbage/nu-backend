@@ -1,24 +1,20 @@
-import uvicorn
 import graphene
-
-from fastapi import FastAPI, Depends
+import uvicorn
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 from starlette.websockets import WebSocket
-
-from newmu.broadcast import broadcast
 from starlette_graphene3 import GraphQLApp, make_playground_handler
 
-from newmu.deps import get_session, require_player, get_player
+from newmu import api
+from newmu.broadcast import broadcast
+from newmu.deps import get_player, get_session, require_player
 from newmu.graphql.loaders import get_loaders
 from newmu.graphql.mutations import Mutation
 from newmu.graphql.queries import Query
 from newmu.graphql.subscriptions import Subscription
 from newmu.models import Player
-
-from newmu import api
 
 app = FastAPI()
 app.add_middleware(

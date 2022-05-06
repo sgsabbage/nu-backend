@@ -1,8 +1,11 @@
-from newmu.db.base_class import Base
-from sqlalchemy import Column, ForeignKey, String, Integer, Boolean
+from uuid import UUID as PythonUUID
+
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
-from uuid import UUID as PythonUUID
+
+from newmu.db.base_class import Base
+
 
 class Area(Base):
     name = Column(String)
