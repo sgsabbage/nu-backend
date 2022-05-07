@@ -21,7 +21,9 @@ class Player(Base):
     password: str = Column(PasswordType(schemes=["pbkdf2_sha512"]))
     email = Column(String)
     characters: list["Character"] = relationship("Character", back_populates="player")
-    windows: list["PlayerWindow"] = relationship("PlayerWindow", back_populates="player", uselist=True)
+    windows: list["PlayerWindow"] = relationship(
+        "PlayerWindow", back_populates="player", uselist=True
+    )
 
 
 class Character(Base):
@@ -59,4 +61,6 @@ class PlayerWindow(Base):
     character_id: PythonUUID = Column(ForeignKey("character.id"))
     character: Character = relationship("Character", uselist=False)
 
-    settings: List[PlayerWindowSetting] = relationship("PlayerWindowSetting", back_populates="window", cascade="all, delete-orphan")
+    settings: List[PlayerWindowSetting] = relationship(
+        "PlayerWindowSetting", back_populates="window", cascade="all, delete-orphan"
+    )

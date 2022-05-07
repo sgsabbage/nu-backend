@@ -60,10 +60,49 @@ def init_db() -> None:
     to_add.append(ChannelCharacter(character=c3, channel=admin))
     to_add.append(ChannelCharacter(character=c3, channel=plotting))
 
-    PlayerWindow(player=p, name="Map", width=300, height=800, top=0, left=1000, z=500, component="Map", character=c2)
-    PlayerWindow(player=p, name="Scene", width=1000, height=400, top=400, left=0, z=499, character=c2)
-    PlayerWindow(player=p, name="Boards", width=500, height=400, top=0, left=0, z=498, component="BulletinBoards", character=c)
-    PlayerWindow(player=p, name="Channels", width=500, height=400, top=0, left=500, z=497,component="Channels", character=c)
+    PlayerWindow(
+        player=p,
+        name="Map",
+        width=300,
+        height=800,
+        top=0,
+        left=1000,
+        z=500,
+        component="Map",
+        character=c2,
+    )
+    PlayerWindow(
+        player=p,
+        name="Scene",
+        width=1000,
+        height=400,
+        top=400,
+        left=0,
+        z=499,
+        character=c2,
+    )
+    PlayerWindow(
+        player=p,
+        name="Boards",
+        width=500,
+        height=400,
+        top=0,
+        left=0,
+        z=498,
+        component="BulletinBoards",
+        character=c,
+    )
+    PlayerWindow(
+        player=p,
+        name="Channels",
+        width=500,
+        height=400,
+        top=0,
+        left=500,
+        z=497,
+        component="Channels",
+        character=c,
+    )
 
     ChannelMessage(
         character=c3,

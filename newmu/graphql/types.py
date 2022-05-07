@@ -90,6 +90,7 @@ class Character(graphene.ObjectType):
     id = graphene.ID(required=True)
     name = graphene.String(required=True)
 
+
 class ChannelMessage(graphene.ObjectType):
     id = graphene.ID(required=True)
     timestamp = graphene.DateTime(required=True)
@@ -109,38 +110,61 @@ class ChannelMessage(graphene.ObjectType):
         )
         return result.scalar_one()
 
+
 class ChannelMessageConnection(relay.Connection):
     nodes = graphene.List(graphene.NonNull(ChannelMessage), required=True)
+
     class Meta:
         node = ChannelMessage
+
 
 class Channel(graphene.ObjectType):
     id = graphene.ID(required=True)
     name = graphene.String(required=True)
     description = graphene.String()
-    messages = graphene.Field(ChannelMessageConnection, first=graphene.Int(), last=graphene.Int(), after=graphene.String(), before=graphene.String(), required=True)
+    messages = graphene.Field(
+        ChannelMessageConnection,
+        first=graphene.Int(),
+        last=graphene.Int(),
+        after=graphene.String(),
+        before=graphene.String(),
+        required=True,
+    )
     characters = graphene.List(graphene.NonNull(Character), required=True)
 
     @staticmethod
-    async def resolve_messages(root, info, first, after, before, last) -> [models.ChannelMessage]:
+    async def resolve_messages(
+        root, info, first, after, before, last
+    ) -> [models.ChannelMessage]:
         if first is not None and last is not None:
             raise GraphQLError("Cannot specify first and last")
         session = info.context["session"]
 
-        statement = select(models.ChannelMessage).filter(models.ChannelMessage.channel_id == root.id)
+        statement = select(models.ChannelMessage).filter(
+            models.ChannelMessage.channel_id == root.id
+        )
 
-        bounds_stmnt = select(func.min(models.ChannelMessage.timestamp), func.max(models.ChannelMessage.timestamp)).where(models.ChannelMessage.channel_id == root.id)
+        bounds_stmnt = select(
+            func.min(models.ChannelMessage.timestamp),
+            func.max(models.ChannelMessage.timestamp),
+        ).where(models.ChannelMessage.channel_id == root.id)
         bounds = (await session.execute(bounds_stmnt)).first()
 
         if after is not None:
-            statement = statement.where(models.ChannelMessage.timestamp > parser.isoparse(after))
+            statement = statement.where(
+                models.ChannelMessage.timestamp > parser.isoparse(after)
+            )
         if before is not None:
-            statement = statement.where(models.ChannelMessage.timestamp < parser.isoparse(before))
+            statement = statement.where(
+                models.ChannelMessage.timestamp < parser.isoparse(before)
+            )
 
         if last is None:
             statement = statement.order_by(models.ChannelMessage.timestamp)
         else:
-            statement = statement.order_by(desc(models.ChannelMessage.timestamp)).limit(last)
+            statement = statement.order_by(desc(models.ChannelMessage.timestamp)).limit(
+                last
+            )
 
         if first is not None:
             statement = statement.limit(first)
@@ -158,15 +182,13 @@ class Channel(graphene.ObjectType):
             pass
         elif results:
             has_next_page = bounds[1] > results[-1].timestamp
-            has_previous_page =  bounds[0] < results[0].timestamp
+            has_previous_page = bounds[0] < results[0].timestamp
         elif before is not None:
             has_next_page = True
         elif after is not None:
             has_previous_page = True
 
-        pi = PageInfo(
-                has_next_page=has_next_page,
-                has_previous_page=has_previous_page)
+        pi = PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page)
         if results:
             pi.start_cursor = results[0].timestamp.isoformat()
             pi.end_cursor = results[-1].timestamp.isoformat()
@@ -174,15 +196,18 @@ class Channel(graphene.ObjectType):
         return ChannelMessageConnection(
             page_info=pi,
             edges=[{"cursor": r.timestamp.isoformat(), "node": r} for r in results],
-            nodes=results
+            nodes=results,
         )
-
 
     @staticmethod
     async def resolve_characters(root, info):
         session = info.context["session"]
         result = await session.execute(
-            select(models.Character).join(models.Character.character_channels).join(models.Channel).where(models.Channel.id == root.id))
+            select(models.Character)
+            .join(models.Character.character_channels)
+            .join(models.Channel)
+            .where(models.Channel.id == root.id)
+        )
         return result.scalars().all()
 
 
@@ -211,6 +236,8 @@ class Window(graphene.ObjectType):
     async def resolve_settings(root, info):
         session = info.context["session"]
         result = await session.execute(
-            select(models.PlayerWindowSetting).join(models.PlayerWindowSetting.window).where(models.PlayerWindow.id == root.id)
+            select(models.PlayerWindowSetting)
+            .join(models.PlayerWindowSetting.window)
+            .where(models.PlayerWindow.id == root.id)
         )
         return result.scalars().all()

@@ -4,12 +4,13 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
+from starlette.responses import Response
 from starlette.websockets import WebSocket
 from starlette_graphene3 import GraphQLApp, make_playground_handler
 
 from newmu import api
 from newmu.broadcast import broadcast
-from newmu.deps import get_player, get_session, require_player
+from newmu.deps import get_player, get_session
 from newmu.graphql.loaders import get_loaders
 from newmu.graphql.mutations import Mutation
 from newmu.graphql.queries import Query
@@ -42,7 +43,7 @@ schema = graphene.Schema(query=Query, subscription=Subscription, mutation=Mutati
 
 
 @app.get("/")
-def root(request: Request):
+def root(request: Request) -> Response:
     return make_playground_handler()(request)
 
 
@@ -51,7 +52,7 @@ async def root_post(
     request: Request,
     player: Player = Depends(get_player),
     session: AsyncSession = Depends(get_session),
-):
+) -> None:
     loaders = get_loaders(session)
     async with session.begin():
         return await GraphQLApp(
@@ -65,7 +66,7 @@ async def root_ws(
     ws: WebSocket,
     player: Player = Depends(get_player),
     session: AsyncSession = Depends(get_session),
-):
+) -> None:
     loaders = get_loaders(session)
 
     if player is None:

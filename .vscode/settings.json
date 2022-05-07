@@ -1,12 +1,5 @@
 {
-    "python.testing.pytestArgs": [
-        "--cov",
-        "--cov-report",
-        "html:coverage/html",
-        "--cov-report",
-        "xml:cov.xml",
-        "newmu/test"
-    ],
+    "python.testing.pytestArgs": [],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.formatting.provider": "black",
@@ -16,6 +9,13 @@
     "[python]": {
         "editor.codeActionsOnSave": {
             "source.organizeImports": true
-        }
+        },
+        "editor.formatOnSave": true,
+    },
+    "files.exclude": {
+        "**/__pycache__": true
+    },
+    "search.exclude": {
+        "**/__pycache__": true
     }
 }

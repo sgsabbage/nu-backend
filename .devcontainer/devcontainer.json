@@ -15,6 +15,7 @@
 		"ms-python.python",
 		"ms-python.vscode-pylance",
 		"ckolkman.vscode-postgres",
-		"ryanluker.vscode-coverage-gutters"
+		"ryanluker.vscode-coverage-gutters",
+		"EditorConfig.EditorConfig"
 	]
 }

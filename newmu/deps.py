@@ -40,7 +40,9 @@ async def get_player(
     if payload["exp"] < datetime.datetime.now().timestamp():
         return None
     async with session.begin():
-        result = await session.execute(select(Player).filter(Player.id == payload["sub"]))
+        result = await session.execute(
+            select(Player).filter(Player.id == payload["sub"])
+        )
 
     return result.scalar_one_or_none()
 

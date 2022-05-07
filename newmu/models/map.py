@@ -1,7 +1,6 @@
 from uuid import UUID as PythonUUID
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 
 from newmu.db.base_class import Base
@@ -10,25 +9,33 @@ from newmu.db.base_class import Base
 class Area(Base):
     name = Column(String)
 
-    rooms = relationship("Room", back_populates="area")
+    rooms: list["Room"] = relationship("Room", back_populates="area", uselist=True)
+
 
 class Room(Base):
     name = Column(String)
 
-    area_id = Column(ForeignKey("area.id"))
-    area = relationship("Area", back_populates="rooms")
+    area_id: PythonUUID = Column(ForeignKey("area.id"))
+    area: Area = relationship("Area", back_populates="rooms", uselist=False)
 
     x = Column(Integer)
     y = Column(Integer)
 
-    exits = relationship("Exit", foreign_keys="Exit.start_room_id", back_populates="start_room")
+    exits: list["Exit"] = relationship(
+        "Exit",
+        foreign_keys="Exit.start_room_id",
+        back_populates="start_room",
+        uselist=True,
+    )
+
 
 class Exit(Base):
     name = Column(String)
     secret = Column(Boolean, default=False)
-    
-    start_room_id = Column(ForeignKey("room.id"))
-    start_room = relationship("Room", foreign_keys=start_room_id, back_populates="exits")
-    end_room_id = Column(ForeignKey("room.id"))
-    end_room = relationship("Room", foreign_keys=end_room_id)
 
+    start_room_id: PythonUUID = Column(ForeignKey("room.id"))
+    start_room: Room = relationship(
+        "Room", foreign_keys=start_room_id, back_populates="exits", uselist=False
+    )
+    end_room_id: PythonUUID = Column(ForeignKey("room.id"))
+    end_room: Room = relationship("Room", foreign_keys=end_room_id, uselist=False)

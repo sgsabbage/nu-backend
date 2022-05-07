@@ -17,6 +17,8 @@ class Subscription(graphene.ObjectType):
                 async with session.begin():
                     message_id = event.message
                     result = await session.execute(
-                        select(models.ChannelMessage).filter(models.ChannelMessage.id == message_id)
+                        select(models.ChannelMessage).filter(
+                            models.ChannelMessage.id == message_id
+                        )
                     )
                     yield result.scalar_one()
