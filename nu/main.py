@@ -1,21 +1,25 @@
-import graphene
+from dataclasses import dataclass
+
+import strawberry
 import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.requests import Request
-from starlette.responses import Response
-from starlette.websockets import WebSocket
-from starlette_graphene3 import GraphQLApp, make_playground_handler
+from strawberry.fastapi import BaseContext, GraphQLRouter
+from strawberry.types import Info
 
 from nu import api
 from nu.broadcast import broadcast
 from nu.deps import get_player, get_session
-from nu.graphql.loaders import get_loaders
-from nu.graphql.mutations import Mutation
+from nu.graphql.loaders import Loaders, get_loaders
 from nu.graphql.queries import Query
-from nu.graphql.subscriptions import Subscription
+
+# from nu.graphql.mutations import Mutation
+# from nu.graphql.subscriptions import Subscription
 from nu.models import Player
+
+# from nu.graphql.loaders import get_loaders
+
 
 app = FastAPI()
 app.add_middleware(
@@ -35,48 +39,62 @@ async def broadcast_connect() -> None:
 
 
 @app.on_event("shutdown")
-async def startup_event() -> None:
+async def broadcase_disconnect() -> None:
     await broadcast.disconnect()
 
 
-schema = graphene.Schema(query=Query, subscription=Subscription, mutation=Mutation)
+@dataclass
+class Context(BaseContext):
+    player: Player
+    session: AsyncSession
+    loaders: Loaders
 
 
-@app.get("/")
-def root(request: Request) -> Response:
-    return make_playground_handler()(request)
+NuInfo = Info["Context", "Query"]
 
 
-@app.post("/")
-async def root_post(
-    request: Request,
+async def get_context(
     player: Player = Depends(get_player),
     session: AsyncSession = Depends(get_session),
-) -> None:
-    loaders = get_loaders(session)
-    async with session.begin():
-        return await GraphQLApp(
-            schema,
-            context_value={"loaders": loaders, "session": session, "player": player},
-        )._handle_http_request(request)
+) -> Context:
+    return Context(player=player, session=session, loaders=get_loaders(session))
 
 
-@app.websocket("/")
-async def root_ws(
-    ws: WebSocket,
-    player: Player = Depends(get_player),
-    session: AsyncSession = Depends(get_session),
-) -> None:
-    loaders = get_loaders(session)
+schema = strawberry.Schema(Query)
+graphql_app = GraphQLRouter(schema=schema, context_getter=get_context)
+app.include_router(graphql_app, prefix="/graphql")
 
-    if player is None:
-        await ws.accept()
-        await ws.close(4001)
-        return
 
-    await GraphQLApp(
-        schema, context_value={"loaders": loaders, "session": session, "player": player}
-    )._run_websocket_server(ws)
+# @app.post("/")
+# async def root_post(
+#     request: Request,
+#     player: Player = Depends(get_player),
+#     session: AsyncSession = Depends(get_session),
+# ) -> None:
+#     loaders = get_loaders(session)
+#     async with session.begin():
+#         return await GraphQLApp(
+#             schema,
+#             context_value={"loaders": loaders, "session": session, "player": player},
+#         )._handle_http_request(request)
+
+
+# @app.websocket("/")
+# async def root_ws(
+#     ws: WebSocket,
+#     player: Player = Depends(get_player),
+#     session: AsyncSession = Depends(get_session),
+# ) -> None:
+#     loaders = get_loaders(session)
+
+#     if player is None:
+#         await ws.accept()
+#         await ws.close(4001)
+#         return
+
+#     await GraphQLApp(
+#         schema, context_value={"loaders": loaders, "session": session, "player": player}
+#     )._run_websocket_server(ws)
 
 
 def start() -> None:
