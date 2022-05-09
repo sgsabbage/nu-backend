@@ -2,8 +2,8 @@ import graphene
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-import newmu.graphql.types as types
-import newmu.models as models
+import nu.graphql.types as types
+import nu.models as models
 
 
 class Query(graphene.ObjectType):

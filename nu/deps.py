@@ -6,9 +6,9 @@ from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from newmu.core.config import settings
-from newmu.db.session import SessionLocal
-from newmu.models import Player
+from nu.core.config import settings
+from nu.db.session import SessionLocal
+from nu.models import Player
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

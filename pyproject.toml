@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "newmu"
+name = "nu"
 version = "0.1.0"
 description = ""
 authors = []
@@ -37,13 +37,13 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-start = "newmu.main:start"
-init_db = "newmu.db:init_db"
+start = "nu.main:start"
+init_db = "nu.db:init_db"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = [
-    "newmu/test"
+    "nu/test"
 ]
 
 [tool.isort]

@@ -8,14 +8,14 @@ from starlette.responses import Response
 from starlette.websockets import WebSocket
 from starlette_graphene3 import GraphQLApp, make_playground_handler
 
-from newmu import api
-from newmu.broadcast import broadcast
-from newmu.deps import get_player, get_session
-from newmu.graphql.loaders import get_loaders
-from newmu.graphql.mutations import Mutation
-from newmu.graphql.queries import Query
-from newmu.graphql.subscriptions import Subscription
-from newmu.models import Player
+from nu import api
+from nu.broadcast import broadcast
+from nu.deps import get_player, get_session
+from nu.graphql.loaders import get_loaders
+from nu.graphql.mutations import Mutation
+from nu.graphql.queries import Query
+from nu.graphql.subscriptions import Subscription
+from nu.models import Player
 
 app = FastAPI()
 app.add_middleware(
@@ -82,7 +82,7 @@ async def root_ws(
 def start() -> None:
     """Launched with `poetry run start` at root level"""
     uvicorn.run(
-        "newmu.main:app",
+        "nu.main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,

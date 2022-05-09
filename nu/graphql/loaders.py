@@ -2,7 +2,7 @@ from aiodataloader import DataLoader
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from newmu.models import Character
+from nu.models import Character
 
 
 class DBDataLoader(DataLoader):

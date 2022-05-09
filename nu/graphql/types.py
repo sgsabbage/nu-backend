@@ -4,7 +4,7 @@ from graphene import PageInfo, relay
 from graphql import GraphQLError
 from sqlalchemy import desc, func, select
 
-import newmu.models as models
+import nu.models as models
 
 
 class Area(graphene.ObjectType):

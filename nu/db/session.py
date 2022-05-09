@@ -2,7 +2,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from newmu.core.config import settings
+from nu.core.config import settings
 
 url = make_url(settings.SQLALCHEMY_DATABASE_URI)
 url = url.set(drivername="postgresql+asyncpg")

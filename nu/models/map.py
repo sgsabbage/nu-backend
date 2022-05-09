@@ -3,7 +3,7 @@ from uuid import UUID as PythonUUID
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from newmu.db.base_class import Base
+from nu.db.base_class import Base
 
 
 class Area(Base):

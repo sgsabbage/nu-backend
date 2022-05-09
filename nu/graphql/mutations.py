@@ -6,9 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import InvalidRequestError, StatementError
 from sqlalchemy.orm import selectinload
 
-from newmu import models
-from newmu.graphql import types
-from newmu.models import PlayerWindowSetting
+from nu import models
+from nu.graphql import types
+from nu.models import PlayerWindowSetting
 
 
 class WindowSettingInput(graphene.InputObjectType):
