@@ -1,13 +1,16 @@
-from dataclasses import dataclass
-from typing import Type, TypeVar
+from __future__ import annotations
+
+import dataclasses
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 import strawberry
-from dateutil import parser
-from graphql import GraphQLError
-from sqlalchemy import desc, func, select
+from sqlalchemy import select
 
 import nu.models as models
-from nu.db.base_class import Base
+
+if TYPE_CHECKING:
+    from nu.db.base_class import Base
+    from nu.main import NuInfo
 
 # class Area(graphene.ObjectType):
 #     id = graphene.ID(required=True)
@@ -74,28 +77,51 @@ from nu.db.base_class import Base
 #         return result.scalar_one()
 
 
-# class CurrentCharacter(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
-#     base_color = graphene.String()
-
-T = TypeVar("T", bound="BaseType")
+T = TypeVar("T", bound="Base")
+C = TypeVar("C", bound="BaseType")  # type: ignore
 
 
-@dataclass
-class BaseType:
+class BaseType(Generic[T]):
+    _model: T
+
     @classmethod
-    def from_orm(cls: Type[T], instance: Base) -> T:
-        return cls()
+    def from_orm(cls: type[C], instance: T) -> C:
+        attrs = {}
+        for field in [f for f in dataclasses.fields(cls) if f.init]:
+            attrs[field.name] = getattr(instance, field.name)
+        obj = cls(**attrs)
+        obj._model = instance
+        return obj
 
 
 @strawberry.type
-class CurrentPlayer(BaseType):
+class Player(BaseType[models.Player]):
     id: strawberry.ID
     username: str
     email: str
-    # characters = graphene.List(graphene.NonNull(CurrentCharacter), required=True)
-    # windows = graphene.List(graphene.NonNull(lambda: Window), required=True)
+
+    @strawberry.field
+    async def characters(self, info: "NuInfo") -> list["Character"]:
+        session = info.context.session
+        result = await session.execute(
+            select(models.Character).filter(models.Character.player_id == self.id)
+        )
+        return [Character.from_orm(c) for c in result.scalars().all()]
+
+    @strawberry.field
+    async def windows(self, info: "NuInfo") -> list["Window"]:
+        session = info.context.session
+        result = await session.execute(
+            select(models.PlayerWindow).filter(models.PlayerWindow.player_id == self.id)
+        )
+        return [Window.from_orm(w) for w in result.scalars().all()]
+
+
+@strawberry.type
+class Character(BaseType[models.Character]):
+    id: strawberry.ID
+    name: str
+    base_color: str | None
 
 
 # class Character(graphene.ObjectType):
@@ -223,33 +249,35 @@ class CurrentPlayer(BaseType):
 #         return result.scalars().all()
 
 
-# class WindowSetting(graphene.ObjectType):
-#     key = graphene.String(required=True)
-#     value = graphene.String(required=True)
+@strawberry.type
+class WindowSetting(BaseType[models.PlayerWindow]):
+    key: str
+    value: str
 
 
-# class Window(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
-#     component = graphene.String()
-#     character = graphene.Field(CurrentCharacter)
-#     width = graphene.Int(required=True)
-#     height = graphene.Int(required=True)
-#     top = graphene.Int(required=True)
-#     left = graphene.Int(required=True)
-#     z = graphene.Int(required=True)
-#     settings = graphene.List(graphene.NonNull(WindowSetting), required=True)
+@strawberry.type
+class Window(BaseType[models.PlayerWindow]):
+    id: strawberry.ID
+    name: str
+    component: str | None
+    width: int
+    height: int
+    top: int
+    left: int
+    z: int
 
-#     @staticmethod
-#     def resolve_character(root, info):
-#         return info.context["loaders"]["char_loader"].load(root.character_id)
+    @strawberry.field
+    async def character(self, info: "NuInfo") -> Character | None:
+        return Character.from_orm(
+            await info.context.loaders.characters.load(self._model.character_id)
+        )
 
-#     @staticmethod
-#     async def resolve_settings(root, info):
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.PlayerWindowSetting)
-#             .join(models.PlayerWindowSetting.window)
-#             .where(models.PlayerWindow.id == root.id)
-#         )
-#         return result.scalars().all()
+    @strawberry.field
+    async def settings(self, info: "NuInfo") -> list[WindowSetting]:
+        session = info.context.session
+        result = await session.execute(
+            select(models.PlayerWindowSetting)
+            .join(models.PlayerWindowSetting.window)
+            .where(models.PlayerWindow.id == self.id)
+        )
+        return [WindowSetting.from_orm(c) for c in result.scalars().all()]

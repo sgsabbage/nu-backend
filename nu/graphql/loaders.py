@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Coroutine
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,8 +11,8 @@ from nu.models import Character
 
 def load_characters(
     session: AsyncSession,
-) -> Callable[[list[str]], Coroutine[Any, Any, list[Character | None]]]:
-    async def lookup(keys: list[str]) -> list[Character | None]:
+) -> Callable[[list[UUID]], Coroutine[Any, Any, list[Character | None]]]:
+    async def lookup(keys: list[UUID]) -> list[Character | None]:
         result = await session.execute(select(Character).filter(Character.id.in_(keys)))
         chars = result.scalars().all()
         return [next((c for c in chars if c.id == k), None) for k in keys]
@@ -21,7 +22,7 @@ def load_characters(
 
 @dataclass
 class Loaders:
-    characters: DataLoader[str, Character]
+    characters: DataLoader[UUID, Character]
 
 
 def get_loaders(session: AsyncSession) -> Loaders:

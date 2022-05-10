@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import strawberry
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 import nu.graphql.types as types
 import nu.models as models
@@ -11,21 +10,18 @@ if TYPE_CHECKING:
     from nu.main import NuInfo
 
 
-async def get_current_player(info: "NuInfo") -> types.CurrentPlayer:
+async def get_current_player(info: "NuInfo") -> types.Player:
     session = info.context.session
     result = await session.execute(
-        select(models.Player)
-        .options(selectinload(models.Player.characters))
-        .options(selectinload(models.Player.windows))
-        .where(models.Player.id == info.context.player.id)
+        select(models.Player).where(models.Player.id == info.context.player.id)
     )
-    return types.CurrentPlayer.from_orm(result.scalar_one())
+    return types.Player.from_orm(result.scalar_one())
 
 
 @strawberry.type
 class Query:
 
-    me: types.CurrentPlayer = strawberry.field(resolver=get_current_player)
+    me: types.Player = strawberry.field(resolver=get_current_player)
     # @strawberry.field
     # async def me(self, info: "NuInfo") -> types.CurrentPlayer:
     #
