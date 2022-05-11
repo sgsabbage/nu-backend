@@ -12,70 +12,6 @@ if TYPE_CHECKING:
     from nu.db.base_class import Base
     from nu.main import NuInfo
 
-# class Area(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
-#     rooms = graphene.List(graphene.NonNull(lambda: Room), required=True)
-
-#     @staticmethod
-#     async def resolve_rooms(root, info) -> models.Room:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Room).filter(models.Room.area_id == root.id)
-#         )
-
-#         return result.scalars().all()
-
-
-# class Room(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
-#     area = graphene.Field(Area, required=True)
-#     x = graphene.Int(required=True)
-#     y = graphene.Int(required=True)
-#     exits = graphene.List(graphene.NonNull(lambda: Exit), required=True)
-
-#     @staticmethod
-#     async def resolve_area(root, info) -> models.Area:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Area).filter(models.Area.id == root.area_id)
-#         )
-#         return result.scalar_one()
-
-#     @staticmethod
-#     async def resolve_exits(root, info) -> models.Room:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Exit).filter(models.Exit.start_room_id == root.id)
-#         )
-
-#         return result.scalars().all()
-
-
-# class Exit(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
-#     start_room = graphene.Field(Room, required=True)
-#     end_room = graphene.Field(Room, required=True)
-#     secret = graphene.Boolean(required=True)
-
-#     @staticmethod
-#     async def resolve_start_room(root, info) -> models.Room:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Room).filter(models.Room.id == root.start_room_id)
-#         )
-#         return result.scalar_one()
-
-#     @staticmethod
-#     async def resolve_end_room(root, info) -> models.Room:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Room).filter(models.Room.id == root.end_room_id)
-#         )
-#         return result.scalar_one()
-
 
 T = TypeVar("T", bound="Base")
 C = TypeVar("C", bound="BaseType")  # type: ignore
@@ -124,10 +60,74 @@ class Character(BaseType[models.Character]):
     base_color: str | None
 
 
-# class Character(graphene.ObjectType):
+@strawberry.type
+class Area(BaseType[models.Area]):
+    id: strawberry.ID
+    name: str
+
+    @strawberry.field
+    async def rooms(self, info: "NuInfo") -> list[Room]:
+        session = info.context.session
+        result = await session.execute(
+            select(models.Room).filter(models.Room.area_id == self.id)
+        )
+
+        return [Room.from_orm(r) for r in result.scalars().all()]
+
+
+@strawberry.type
+class Room(BaseType[models.Room]):
+    id: strawberry.ID
+    name: str
+    x: int
+    y: int
+    # exits = graphene.List(graphene.NonNull(lambda: Exit), required=True)
+
+    @strawberry.field
+    async def area(self, info: "NuInfo") -> Area:
+        return Area.from_orm(await info.context.loaders.areas.load(self._model.area_id))
+
+
+#     @staticmethod
+#     async def resolve_area(root, info) -> models.Area:
+#         session = info.context["session"]
+#         result = await session.execute(
+#             select(models.Area).filter(models.Area.id == root.area_id)
+#         )
+#         return result.scalar_one()
+
+#     @staticmethod
+#     async def resolve_exits(root, info) -> models.Room:
+#         session = info.context["session"]
+#         result = await session.execute(
+#             select(models.Exit).filter(models.Exit.start_room_id == root.id)
+#         )
+
+#         return result.scalars().all()
+
+
+# class Exit(graphene.ObjectType):
 #     id = graphene.ID(required=True)
 #     name = graphene.String(required=True)
+#     start_room = graphene.Field(Room, required=True)
+#     end_room = graphene.Field(Room, required=True)
+#     secret = graphene.Boolean(required=True)
 
+#     @staticmethod
+#     async def resolve_start_room(root, info) -> models.Room:
+#         session = info.context["session"]
+#         result = await session.execute(
+#             select(models.Room).filter(models.Room.id == root.start_room_id)
+#         )
+#         return result.scalar_one()
+
+#     @staticmethod
+#     async def resolve_end_room(root, info) -> models.Room:
+#         session = info.context["session"]
+#         result = await session.execute(
+#             select(models.Room).filter(models.Room.id == root.end_room_id)
+#         )
+#         return result.scalar_one()
 
 # class ChannelMessage(graphene.ObjectType):
 #     id = graphene.ID(required=True)
@@ -250,7 +250,7 @@ class Character(BaseType[models.Character]):
 
 
 @strawberry.type
-class WindowSetting(BaseType[models.PlayerWindow]):
+class WindowSetting(BaseType[models.PlayerWindowSetting]):
     key: str
     value: str
 

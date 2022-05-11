@@ -17,5 +17,6 @@
 		"ckolkman.vscode-postgres",
 		"ryanluker.vscode-coverage-gutters",
 		"EditorConfig.EditorConfig"
-	]
+	],
+	"remoteUser": "vscode"
 }

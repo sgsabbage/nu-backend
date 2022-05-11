@@ -22,6 +22,19 @@ async def get_current_player(info: "NuInfo") -> types.Player:
 class Query:
 
     me: types.Player = strawberry.field(resolver=get_current_player)
+
+    @strawberry.field
+    async def areas(self, info: "NuInfo") -> list[types.Area]:
+        session = info.context.session
+        result = await session.execute(select(models.Area))
+        return [types.Area.from_orm(a) for a in result.scalars().all()]
+
+    @strawberry.field
+    async def rooms(self, info: "NuInfo") -> list[types.Room]:
+        session = info.context.session
+        result = await session.execute(select(models.Room))
+        return [types.Room.from_orm(r) for r in result.scalars().all()]
+
     # @strawberry.field
     # async def me(self, info: "NuInfo") -> types.CurrentPlayer:
     #
