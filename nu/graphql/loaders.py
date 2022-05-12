@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.dataloader import DataLoader
 
-from nu.models import Area, Character
+from nu.models import Area, Channel, Character
 
 
 def load_characters(
@@ -31,14 +31,27 @@ def load_areas(
     return lookup
 
 
+def load_channels(
+    session: AsyncSession,
+) -> Callable[[list[UUID]], Coroutine[Any, Any, list[Channel | None]]]:
+    async def lookup(keys: list[UUID]) -> list[Channel | None]:
+        result = await session.execute(select(Channel).filter(Channel.id.in_(keys)))
+        channels = result.scalars().all()
+        return [next((c for c in channels if c.id == k), None) for k in keys]
+
+    return lookup
+
+
 @dataclass
 class Loaders:
     characters: DataLoader[UUID, Character]
     areas: DataLoader[UUID, Area]
+    channels: DataLoader[UUID, Channel]
 
 
 def get_loaders(session: AsyncSession) -> Loaders:
     return Loaders(
         characters=DataLoader(load_fn=load_characters(session)),
         areas=DataLoader(load_fn=load_areas(session)),
+        channels=DataLoader(load_fn=load_channels(session)),
     )

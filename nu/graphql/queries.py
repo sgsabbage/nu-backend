@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 import strawberry
 from sqlalchemy import select
@@ -35,43 +36,13 @@ class Query:
         result = await session.execute(select(models.Room))
         return [types.Room.from_orm(r) for r in result.scalars().all()]
 
-    # @strawberry.field
-    # async def me(self, info: "NuInfo") -> types.CurrentPlayer:
-    #
+    @strawberry.field
+    async def channels(self, info: "NuInfo") -> list[types.Channel]:
+        session = info.context.session
+        result = await session.execute(select(models.Channel))
+        return [types.Channel.from_orm(r) for r in result.scalars().all()]
 
-    # channel = graphene.Field(
-    #     types.Channel, required=True, id=graphene.Argument(graphene.ID, required=True)
-    # )
-    # channels = graphene.List(graphene.NonNull(types.Channel), required=True)
-    # areas = graphene.List(graphene.NonNull(types.Area), required=True)
-
-    # @staticmethod
-    # async def resolve_me(root, info):
-    #     session = info.context["session"]
-    #     result = await session.execute(
-    #         select(models.Player)
-    #         .options(selectinload(models.Player.characters))
-    #         .options(selectinload(models.Player.windows))
-    #         .where(models.Player.id == info.context["player"].id)
-    #     )
-    #     return result.scalar_one()
-
-    # @staticmethod
-    # async def resolve_channel(root, info, id):
-    #     session = info.context["session"]
-    #     result = await session.execute(
-    #         select(models.Channel).where(models.Channel.id == id)
-    #     )
-    #     return result.scalar_one()
-
-    # @staticmethod
-    # async def resolve_channels(root, info):
-    #     session = info.context["session"]
-    #     result = await session.execute(select(models.Channel))
-    #     return result.scalars().all()
-
-    # @staticmethod
-    # async def resolve_areas(root, info):
-    #     session = info.context["session"]
-    #     result = await session.execute(select(models.Area))
-    #     return result.scalars().all()
+    @strawberry.field
+    async def channel(self, info: "NuInfo", id: strawberry.ID) -> types.Channel:
+        c = await info.context.loaders.channels.load(UUID(id))
+        return types.Channel.from_orm(c)

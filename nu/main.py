@@ -12,6 +12,7 @@ from nu import api
 from nu.broadcast import broadcast
 from nu.deps import get_player, get_session
 from nu.graphql.loaders import Loaders, get_loaders
+from nu.graphql.mutations import Mutation
 from nu.graphql.queries import Query
 
 # from nu.graphql.mutations import Mutation
@@ -60,7 +61,7 @@ async def get_context(
     return Context(player=player, session=session, loaders=get_loaders(session))
 
 
-schema = strawberry.Schema(Query)
+schema = strawberry.Schema(Query, mutation=Mutation)
 graphql_app = GraphQLRouter(schema=schema, context_getter=get_context)
 app.include_router(graphql_app, prefix="/graphql")
 

@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 import strawberry
-from sqlalchemy import select
+from dateutil import parser
+from graphql import GraphQLError
+from sqlalchemy import desc, func, select
 
 import nu.models as models
+
+from .pagination import Connection, Edge, PageInfo
 
 if TYPE_CHECKING:
     from nu.db.base_class import Base
@@ -89,14 +94,6 @@ class Room(BaseType[models.Room]):
 
 
 #     @staticmethod
-#     async def resolve_area(root, info) -> models.Area:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Area).filter(models.Area.id == root.area_id)
-#         )
-#         return result.scalar_one()
-
-#     @staticmethod
 #     async def resolve_exits(root, info) -> models.Room:
 #         session = info.context["session"]
 #         result = await session.execute(
@@ -129,124 +126,118 @@ class Room(BaseType[models.Room]):
 #         )
 #         return result.scalar_one()
 
-# class ChannelMessage(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     timestamp = graphene.DateTime(required=True)
-#     message = graphene.String(required=True)
-#     character = graphene.Field(Character)
-#     channel = graphene.Field(lambda: Channel, required=True)
 
-#     @staticmethod
-#     def resolve_character(root, info) -> models.Character:
-#         return info.context["loaders"]["char_loader"].load(root.character_id)
+@strawberry.type
+class ChannelMessage(BaseType[models.ChannelMessage]):
+    id: strawberry.ID
+    timestamp: datetime.datetime
+    message: str
+    # channel = graphene.Field(lambda: Channel, required=True)
 
-#     @staticmethod
-#     async def resolve_channel(root, info) -> models.Channel:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Channel).filter(models.Channel.id == root.channel_id)
-#         )
-#         return result.scalar_one()
+    @strawberry.field
+    async def character(self, info: "NuInfo") -> Character:
+        return Character.from_orm(
+            await info.context.loaders.characters.load(self._model.character_id)
+        )
 
-
-# class ChannelMessageConnection(relay.Connection):
-#     nodes = graphene.List(graphene.NonNull(ChannelMessage), required=True)
-
-#     class Meta:
-#         node = ChannelMessage
+    @strawberry.field
+    async def channel(self, info: "NuInfo") -> Channel:
+        return Channel.from_orm(
+            await info.context.loaders.channels.load(self._model.channel_id)
+        )
 
 
-# class Channel(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
-#     description = graphene.String()
-#     messages = graphene.Field(
-#         ChannelMessageConnection,
-#         first=graphene.Int(),
-#         last=graphene.Int(),
-#         after=graphene.String(),
-#         before=graphene.String(),
-#         required=True,
-#     )
-#     characters = graphene.List(graphene.NonNull(Character), required=True)
+@strawberry.type
+class Channel(BaseType[models.Channel]):
+    id: strawberry.ID
+    name: str
+    description: str | None
 
-#     @staticmethod
-#     async def resolve_messages(
-#         root, info, first, after, before, last
-#     ) -> [models.ChannelMessage]:
-#         if first is not None and last is not None:
-#             raise GraphQLError("Cannot specify first and last")
-#         session = info.context["session"]
+    @strawberry.field
+    async def messages(
+        self,
+        info: "NuInfo",
+        first: int | None = None,
+        last: int | None = None,
+        after: str | None = None,
+        before: str | None = None,
+    ) -> Connection[ChannelMessage]:
+        if first is not None and last is not None:
+            raise GraphQLError("Cannot specify first and last")
+        session = info.context.session
 
-#         statement = select(models.ChannelMessage).filter(
-#             models.ChannelMessage.channel_id == root.id
-#         )
+        stmt = select(models.ChannelMessage).filter(
+            models.ChannelMessage.channel_id == self.id
+        )
 
-#         bounds_stmnt = select(
-#             func.min(models.ChannelMessage.timestamp),
-#             func.max(models.ChannelMessage.timestamp),
-#         ).where(models.ChannelMessage.channel_id == root.id)
-#         bounds = (await session.execute(bounds_stmnt)).first()
+        bounds_stmnt = select(
+            func.min(models.ChannelMessage.timestamp),
+            func.max(models.ChannelMessage.timestamp),
+        ).where(models.ChannelMessage.channel_id == self.id)
+        bounds = (await session.execute(bounds_stmnt)).first()
 
-#         if after is not None:
-#             statement = statement.where(
-#                 models.ChannelMessage.timestamp > parser.isoparse(after)
-#             )
-#         if before is not None:
-#             statement = statement.where(
-#                 models.ChannelMessage.timestamp < parser.isoparse(before)
-#             )
+        if after is not None:
+            stmt = stmt.where(models.ChannelMessage.timestamp > parser.isoparse(after))
+        if before is not None:
+            stmt = stmt.where(models.ChannelMessage.timestamp < parser.isoparse(before))
 
-#         if last is None:
-#             statement = statement.order_by(models.ChannelMessage.timestamp)
-#         else:
-#             statement = statement.order_by(desc(models.ChannelMessage.timestamp)).limit(
-#                 last
-#             )
+        if last is None:
+            stmt = stmt.order_by(models.ChannelMessage.timestamp)
+        else:
+            stmt = stmt.order_by(desc(models.ChannelMessage.timestamp)).limit(last)
 
-#         if first is not None:
-#             statement = statement.limit(first)
+        if first is not None:
+            stmt = stmt.limit(first)
 
-#         result = await session.execute(statement)
-#         results: list[models.ChannelMessage] = result.scalars().all()
+        result = await session.execute(stmt)
+        results: list[models.ChannelMessage] = result.scalars().all()
 
-#         if last:
-#             results.reverse()
+        if last:
+            results.reverse()
 
-#         has_next_page = False
-#         has_previous_page = False
+        has_next_page = False
+        has_previous_page = False
 
-#         if bounds[0] is None:
-#             pass
-#         elif results:
-#             has_next_page = bounds[1] > results[-1].timestamp
-#             has_previous_page = bounds[0] < results[0].timestamp
-#         elif before is not None:
-#             has_next_page = True
-#         elif after is not None:
-#             has_previous_page = True
+        if bounds[0] is None:
+            pass
+        elif results:
+            has_next_page = bounds[1] > results[-1].timestamp
+            has_previous_page = bounds[0] < results[0].timestamp
+        elif before is not None:
+            has_next_page = True
+        elif after is not None:
+            has_previous_page = True
 
-#         pi = PageInfo(has_next_page=has_next_page, has_previous_page=has_previous_page)
-#         if results:
-#             pi.start_cursor = results[0].timestamp.isoformat()
-#             pi.end_cursor = results[-1].timestamp.isoformat()
+        pi = PageInfo(
+            has_next_page=has_next_page,
+            has_previous_page=has_previous_page,
+            start_cursor=None,
+            end_cursor=None,
+        )
+        if results:
+            pi.start_cursor = results[0].timestamp.isoformat()
+            pi.end_cursor = results[-1].timestamp.isoformat()
 
-#         return ChannelMessageConnection(
-#             page_info=pi,
-#             edges=[{"cursor": r.timestamp.isoformat(), "node": r} for r in results],
-#             nodes=results,
-#         )
+        return Connection[ChannelMessage](
+            page_info=pi,
+            edges=[
+                Edge[ChannelMessage](
+                    cursor=r.timestamp.isoformat(), node=ChannelMessage.from_orm(r)
+                )
+                for r in results
+            ],
+        )
 
-#     @staticmethod
-#     async def resolve_characters(root, info):
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Character)
-#             .join(models.Character.character_channels)
-#             .join(models.Channel)
-#             .where(models.Channel.id == root.id)
-#         )
-#         return result.scalars().all()
+    @strawberry.field
+    async def characters(self, info: "NuInfo") -> list[Character]:
+        session = info.context.session
+        result = await session.execute(
+            select(models.Character)
+            .join(models.Character.character_channels)
+            .join(models.Channel)
+            .where(models.Channel.id == self.id)
+        )
+        return [Character.from_orm(r) for r in result.scalars().all()]
 
 
 @strawberry.type

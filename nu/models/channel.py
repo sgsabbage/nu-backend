@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID as PythonUUID
 
@@ -49,4 +50,4 @@ class ChannelMessage(Base):
     channel_id: PythonUUID = Column(ForeignKey("channel.id"))
     channel: "Channel" = relationship("Channel", back_populates="messages")
     system = Column(Boolean, default=False)
-    timestamp = Column(TIMESTAMP(timezone=True))
+    timestamp: datetime = Column(TIMESTAMP(timezone=True), nullable=False)
