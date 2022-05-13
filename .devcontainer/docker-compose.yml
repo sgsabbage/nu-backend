@@ -13,6 +13,13 @@ services:
         # Optional Node.js version to install
         NODE_VERSION: "none"
 
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=http"
+      - "traefik.http.routers.backend.middlewares=stripapi@docker"
+      - "traefik.http.middlewares.stripapi.stripprefix.prefixes=/api"
+
     volumes:
       - ..:/workspace:cached
 
@@ -43,6 +50,19 @@ services:
       - nu
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  traefik:
+    image: traefik:latest
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+    ports:
+      - "80:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - nu
 
 volumes:
   postgres-data: null

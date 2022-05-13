@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import strawberry
 from graphql import GraphQLError
@@ -25,13 +24,13 @@ class WindowSettingInput:
 class UpdateWindowInput:
     id: strawberry.ID
 
-    character_id: strawberry.ID | None
-    top: int | None
-    left: int | None
-    width: int | None
-    height: int | None
-    settings: list[WindowSettingInput] | None
-    z: int | None
+    character_id: strawberry.ID | None = None
+    top: int | None = None
+    left: int | None = None
+    width: int | None = None
+    height: int | None = None
+    settings: list[WindowSettingInput] | None = None
+    z: int | None = None
 
 
 @strawberry.type
@@ -166,10 +165,3 @@ class Mutation:
 #         session.add(w)
 #         await session.flush()
 #         return OpenWindow(window=w)
-
-
-# class Mutation(graphene.ObjectType):
-#     close_window = CloseWindow.Field()
-#     open_window = OpenWindow.Field(required=True)
-#     update_window = UpdateWindow.Field()
-#     send_channel_message = SendChannelMessage.Field()
