@@ -272,8 +272,3 @@ class Window(BaseType[models.PlayerWindow]):
             .where(models.PlayerWindow.id == self.id)
         )
         return [WindowSetting.from_orm(c) for c in result.scalars().all()]
-
-
-@strawberry.interface
-class Connection:
-    name: str
