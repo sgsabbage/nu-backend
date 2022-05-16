@@ -1,5 +1,16 @@
+import asyncio
+from typing import AsyncGenerator, Generator
+
+import pytest
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, create_async_engine
+
+from nu.core.config import settings
+from nu.db.base_class import metadata
+
+
 @pytest.fixture(scope="session")
-def event_loop() -> asyncio.AbstractEventLoop:
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """
     Creates an instance of the default event loop for the test session.
     """
@@ -11,6 +22,7 @@ def event_loop() -> asyncio.AbstractEventLoop:
 
 @pytest.fixture(scope="session")
 async def session_db() -> AsyncGenerator[AsyncConnection, None]:
+    assert settings.SQLALCHEMY_DATABASE_URI
     url = make_url(settings.SQLALCHEMY_DATABASE_URI)
     url = url.set(drivername="postgresql+asyncpg")
     pg = url.set(database="postgres")
@@ -37,8 +49,6 @@ async def session_db() -> AsyncGenerator[AsyncConnection, None]:
 async def db(session_db: AsyncConnection) -> AsyncGenerator[AsyncSession, None]:
     await session_db.begin()
     session = AsyncSession(bind=session_db)
-
     await session_db.begin_nested()
-
     yield session
     await session_db.rollback()
