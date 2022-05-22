@@ -18,7 +18,6 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_player(
     cookie: str = Cookie(None, alias=settings.API_COOKIE_KEY),
-    session: AsyncSession = Depends(get_session),
 ) -> Optional[Player]:
     if not cookie:
         return None
@@ -39,7 +38,7 @@ async def get_player(
 
     if payload["exp"] < datetime.datetime.now().timestamp():
         return None
-    async with session.begin():
+    async with SessionLocal.begin() as session:
         result = await session.execute(
             select(Player).filter(Player.id == payload["sub"])
         )

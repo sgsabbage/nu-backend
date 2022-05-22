@@ -8,7 +8,8 @@
 	"workspaceFolder": "/workspace",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
-		"python.defaultInterpreterPath": "/usr/local/bin/python"
+		"python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+		"python.terminal.activateEnvInCurrentTerminal": true
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
@@ -18,5 +19,6 @@
 		"ryanluker.vscode-coverage-gutters",
 		"EditorConfig.EditorConfig"
 	],
-	"remoteUser": "vscode"
+	"remoteUser": "vscode",
+	"postCreateCommand": "poetry install"
 }

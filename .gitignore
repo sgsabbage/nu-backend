@@ -3,3 +3,4 @@
 cov.xml
 .coverage
 coverage
+.venv

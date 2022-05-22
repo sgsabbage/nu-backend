@@ -3,7 +3,7 @@ ARG VARIANT=3-bullseye
 FROM mcr.microsoft.com/vscode/devcontainers/python:0-${VARIANT}
 
 ENV PYTHONUNBUFFERED 1
-ENV POETRY_VIRTUALENVS_CREATE false
+ENV POETRY_VIRTUALENVS_IN_PROJECT true
 
 # [Choice] Node.js version: none, lts/*, 16, 14, 12, 10
 ARG NODE_VERSION="none"
@@ -16,13 +16,13 @@ RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/
 
 RUN --mount=type=cache,target=/root/.cache python -m pip install poetry
 
-WORKDIR /workspace
-COPY pyproject.toml poetry.lock .
-
-RUN --mount=type=cache,target=/root/.cache poetry install
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 #     && apt-get -y install --no-install-recommends <your-package-list-here>
 
 
-
+RUN mkdir -p /home/vscode/.vscode-server/extensions \
+        /home/vscode/.vscode-server-insiders/extensions \
+    && chown -R vscode:vscode \
+        /home/vscode/.vscode-server \
+        /home/vscode/.vscode-server-insiders

@@ -1,14 +1,5 @@
-import asyncio
-from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
 
-import pytest
-from sqlalchemy import func, select
-from sqlalchemy.engine import make_url
-from sqlalchemy.event import listens_for
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, create_async_engine
-
-from nu.core.config import settings
-from nu.db.base_class import metadata
 from nu.models import Player
 
 
