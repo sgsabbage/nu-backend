@@ -39,7 +39,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 start = "nu.main:start"
-init_db = "nu.db:init_db"
+init_db = "nu.commands:init_db"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

@@ -144,7 +144,7 @@ class Mutation:
                 channel=channel,
                 character=char,
                 message=input.message,
-                timestamp=datetime.now(),
+                timestamp=datetime.now().astimezone(),
             )
 
             trans.add(cm)
