@@ -6,9 +6,9 @@ from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from newmu.core.config import settings
-from newmu.db.session import SessionLocal
-from newmu.models import Player
+from nu.core.config import settings
+from nu.db.session import SessionLocal
+from nu.models import Player
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -18,7 +18,6 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_player(
     cookie: str = Cookie(None, alias=settings.API_COOKIE_KEY),
-    session: AsyncSession = Depends(get_session),
 ) -> Optional[Player]:
     if not cookie:
         return None
@@ -39,7 +38,7 @@ async def get_player(
 
     if payload["exp"] < datetime.datetime.now().timestamp():
         return None
-    async with session.begin():
+    async with SessionLocal.begin() as session:
         result = await session.execute(
             select(Player).filter(Player.id == payload["sub"])
         )

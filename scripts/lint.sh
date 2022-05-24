@@ -2,7 +2,7 @@
 
 set -xeuo pipefail
 
-black --check newmu
-mypy newmu
-isort --check-only newmu
-flake8 newmu
+black --check nu
+mypy nu
+isort --check-only nu
+flake8 nu

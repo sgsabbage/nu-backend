@@ -6,10 +6,10 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import PasswordType, force_auto_coercion
 
-from newmu.db.base_class import Base
+from nu.db.base_class import Base
 
 if TYPE_CHECKING:
-    from newmu.models.channel import Channel, ChannelCharacter
+    from nu.models.channel import Channel, ChannelCharacter
 
 force_auto_coercion()
 

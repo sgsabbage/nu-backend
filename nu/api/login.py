@@ -9,9 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from newmu.core.config import settings
-from newmu.deps import get_session
-from newmu.models import Player
+from nu.core.config import settings
+from nu.deps import get_session
+from nu.models import Player
 
 router = APIRouter()
 
@@ -47,8 +47,8 @@ async def root(
     response.set_cookie(
         key=settings.API_COOKIE_KEY,
         httponly=True,
-        samesite="strict",
-        secure=True,
+        samesite="lax",
+        secure=False,
         value=jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256"),
     )
 

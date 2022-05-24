@@ -17,5 +17,14 @@
     },
     "search.exclude": {
         "**/__pycache__": true
-    }
+    },
+    "python.languageServer": "Pylance",
+    "python.analysis.packageIndexDepths": [
+        [
+            "sqlalchemy",
+            4,
+            false
+        ]
+    ],
+    "python.terminal.activateEnvInCurrentTerminal": true,
 }
