@@ -2,13 +2,14 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.231.5/containers/python-3-postgres
 // Update the VARIANT arg in docker-compose.yml to pick a Python version
 {
-	"name": "Python 3 & PostgreSQL",
+	"name": "Nu Backend",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspace",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
-		"python.defaultInterpreterPath": "/usr/local/bin/python"
+		"python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+		"python.terminal.activateEnvInCurrentTerminal": true
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
@@ -17,5 +18,7 @@
 		"ckolkman.vscode-postgres",
 		"ryanluker.vscode-coverage-gutters",
 		"EditorConfig.EditorConfig"
-	]
+	],
+	"remoteUser": "vscode",
+	"postCreateCommand": "poetry install"
 }

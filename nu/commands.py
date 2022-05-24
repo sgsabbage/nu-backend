@@ -3,8 +3,9 @@ import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ..core.config import settings
-from ..models import (
+from nu.core.config import settings
+from nu.db.base_class import metadata
+from nu.models import (
     Area,
     Channel,
     ChannelCharacter,
@@ -14,8 +15,7 @@ from ..models import (
     Player,
     Room,
 )
-from ..models.player import PlayerWindow
-from .base_class import metadata
+from nu.models.player import PlayerWindow
 
 
 def init_db() -> None:
@@ -23,12 +23,15 @@ def init_db() -> None:
     metadata.drop_all(engine)
     metadata.create_all(engine)
     to_add = []
-    p = Player(username="Ifrit", password="password123", email="notanemail@example.com")
+    p = Player(username="Ifrit", password="p123", email="notanemail@example.com")
     c = Character(name="Afanc", player=p, base_color="#007ea8")
     c3 = Character(name="Ifrit", player=p, base_color="#804000")
     c2 = Character(name="Rathenhope", player=p)
 
-    to_add.extend([p, c, c3, c2])
+    p2 = Player(username="Player", password="p123", email="notanemail2@example.com")
+    c12 = Character(name="PC", player=p2, base_color="#7e00a8")
+
+    to_add.extend([p, c, c3, c2, p2, c12])
 
     pub = Channel(name="Public", description="The public channel")
     admin = Channel(name="Admin", description="The admin channel")
@@ -59,6 +62,7 @@ def init_db() -> None:
     to_add.append(ChannelCharacter(character=c3, channel=pub))
     to_add.append(ChannelCharacter(character=c3, channel=admin))
     to_add.append(ChannelCharacter(character=c3, channel=plotting))
+    to_add.append(ChannelCharacter(character=c12, channel=pub))
 
     PlayerWindow(
         player=p,
@@ -102,6 +106,17 @@ def init_db() -> None:
         z=497,
         component="Channels",
         character=c,
+    )
+    PlayerWindow(
+        player=p2,
+        name="Channels",
+        width=500,
+        height=400,
+        top=0,
+        left=500,
+        z=497,
+        component="Channels",
+        character=c12,
     )
 
     ChannelMessage(

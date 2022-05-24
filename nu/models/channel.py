@@ -1,15 +1,15 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID as PythonUUID
 
-from graphene import relay
 from sqlalchemy import Boolean, Column, ForeignKey, String
-from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import relationship
 
-from newmu.db.base_class import Base
+from nu.db.base_class import Base
 
 if TYPE_CHECKING:
-    from newmu.models.player import Character
+    from nu.models.player import Character
 
 __all__ = ["Channel", "ChannelCharacter", "ChannelMessage"]
 
@@ -50,4 +50,4 @@ class ChannelMessage(Base):
     channel_id: PythonUUID = Column(ForeignKey("channel.id"))
     channel: "Channel" = relationship("Channel", back_populates="messages")
     system = Column(Boolean, default=False)
-    timestamp = Column(TIMESTAMP(timezone=True))
+    timestamp: datetime = Column(TIMESTAMP(timezone=True), nullable=False)
