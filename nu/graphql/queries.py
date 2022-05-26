@@ -15,10 +15,9 @@ if TYPE_CHECKING:
 
 async def get_current_player(info: "NuInfo") -> types.Player:
     session = info.context.session
-    async with session.begin() as trans:
-        result = await trans.execute(
-            select(models.Player).where(models.Player.id == info.context.player.id)
-        )
+    result = await session.execute(
+        select(models.Player).where(models.Player.id == info.context.player.id)
+    )
     return types.Player.from_orm(result.scalar_one())
 
 
@@ -30,22 +29,19 @@ class Query:
     @strawberry.field
     async def areas(self, info: "NuInfo") -> list[types.Area]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(select(models.Area))
+        result = await session.execute(select(models.Area))
         return [types.Area.from_orm(a) for a in result.scalars().all()]
 
     @strawberry.field
     async def rooms(self, info: "NuInfo") -> list[types.Room]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(select(models.Room))
+        result = await session.execute(select(models.Room))
         return [types.Room.from_orm(r) for r in result.scalars().all()]
 
     @strawberry.field
     async def channels(self, info: "NuInfo") -> list[types.Channel]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(select(models.Channel))
+        result = await session.execute(select(models.Channel))
         return [types.Channel.from_orm(r) for r in result.scalars().all()]
 
     @strawberry.field

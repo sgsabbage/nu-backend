@@ -7,9 +7,10 @@ import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
+from strawberry.extensions import Extension
 from strawberry.fastapi import BaseContext, GraphQLRouter
 from strawberry.types import Info
+from strawberry.utils.await_maybe import AwaitableOrValue
 
 from nu import api
 from nu.broadcast import broadcast
@@ -50,9 +51,14 @@ async def broadcase_disconnect() -> None:
 
 
 @dataclass
+class PlayerContext(BaseContext):
+    player: Player
+
+
+@dataclass
 class Context(BaseContext):
     player: Player
-    session: sessionmaker[AsyncSession]
+    session: AsyncSession
     loaders: Loaders
 
 
@@ -61,13 +67,38 @@ NuInfo = Info["Context", "Query"]
 
 async def get_context(
     player: Player = Depends(get_player),
-) -> Context:
-    return Context(
-        player=player, session=SessionLocal, loaders=get_loaders(SessionLocal)
-    )
+) -> PlayerContext:
+    return PlayerContext(player=player)
 
 
-schema = strawberry.Schema(Query, mutation=Mutation, subscription=Subscription)
+class TestExtension(Extension):
+    async def on_request_start(self) -> AwaitableOrValue[None]:  # type: ignore
+        c: PlayerContext = self.execution_context.context
+        session = SessionLocal()
+        await session.begin()
+
+        context = Context(
+            player=c.player, loaders=get_loaders(session), session=session
+        )
+        context.request = c.request
+        context.background_tasks = c.background_tasks
+        context.response = c.response
+        self.execution_context.context = context
+
+    async def on_request_end(self) -> AwaitableOrValue[None]:  # type: ignore
+        s: AsyncSession = self.execution_context.context.session
+        try:
+            if self.execution_context.errors:
+                await s.rollback()
+            else:
+                await s.commit()
+        finally:
+            await s.close()
+
+
+schema = strawberry.Schema(
+    Query, mutation=Mutation, subscription=Subscription, extensions=[TestExtension]
+)
 graphql_app = GraphQLRouter(schema=schema, context_getter=get_context)
 app.include_router(graphql_app, prefix="/graphql")
 
