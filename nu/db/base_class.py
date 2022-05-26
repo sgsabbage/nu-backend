@@ -28,7 +28,7 @@ class Base:
 
     # Generate __tablename__ automatically, converting CamelCase class names to
     # snake_case table names
-    @declared_attr  # type: ignore
+    @declared_attr
     def __tablename__(cls) -> str:
         """Convert CamelCase class name to underscores_between_words
         table name."""

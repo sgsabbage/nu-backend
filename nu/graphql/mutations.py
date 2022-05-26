@@ -68,42 +68,39 @@ class Mutation:
         self, info: "NuInfo", input: UpdateWindowInput
     ) -> UpdateWindowResult:
         session = info.context.session
-        async with session.begin() as trans:
+        try:
+            result = await session.execute(
+                select(models.PlayerWindow)
+                .filter(models.PlayerWindow.id == input.id)
+                .options(selectinload(models.PlayerWindow.settings))
+            )
+            window = result.scalar_one()
+        except (InvalidRequestError, StatementError):
+            raise GraphQLError(f"Window '{input.id}' does not exist")
+
+        if input.character_id:
             try:
-                result = await trans.execute(
-                    select(models.PlayerWindow)
-                    .filter(models.PlayerWindow.id == input.id)
-                    .options(selectinload(models.PlayerWindow.settings))
+                character = await session.execute(
+                    select(models.Character).filter(
+                        models.Character.id == input.character_id
+                    )
                 )
-                window = result.scalar_one()
+                window.character = character.scalar_one()
             except (InvalidRequestError, StatementError):
-                raise GraphQLError(f"Window '{input.id}' does not exist")
+                raise GraphQLError(f"Character '{input.character_id}' does not exist")
 
-            if input.character_id:
-                try:
-                    character = await trans.execute(
-                        select(models.Character).filter(
-                            models.Character.id == input.character_id
-                        )
-                    )
-                    window.character = character.scalar_one()
-                except (InvalidRequestError, StatementError):
-                    raise GraphQLError(
-                        f"Character '{input.character_id}' does not exist"
-                    )
-
-            for arg in ["top", "left", "width", "height", "z"]:
-                if (val := getattr(input, arg)) is not None:
-                    setattr(window, arg, val)
-            if input.settings is not None:
-                settings = []
-                for setting in input.settings:
-                    new_setting = PlayerWindowSetting(
-                        key=setting.key, value=setting.value, window=window
-                    )
-                    trans.add(new_setting)
-                    settings.append(new_setting)
-                window.settings = settings
+        for arg in ["top", "left", "width", "height", "z"]:
+            if (val := getattr(input, arg)) is not None:
+                setattr(window, arg, val)
+        if input.settings is not None:
+            settings = []
+            for setting in input.settings:
+                new_setting = PlayerWindowSetting(
+                    key=setting.key, value=setting.value, window=window
+                )
+                session.add(new_setting)
+                settings.append(new_setting)
+            window.settings = settings
 
         return UpdateWindowResult(window=types.Window.from_orm(window))
 
@@ -112,44 +109,41 @@ class Mutation:
         self, info: "NuInfo", input: CloseWindowInput
     ) -> CloseWindowResult:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(
-                select(models.PlayerWindow).filter(models.PlayerWindow.id == input.id)
-            )
-            window = result.scalar_one()
-            await trans.delete(window)
+        result = await session.execute(
+            select(models.PlayerWindow).filter(models.PlayerWindow.id == input.id)
+        )
+        window = result.scalar_one()
+        await session.delete(window)
         return CloseWindowResult(ok=True)
 
     @strawberry.mutation
     async def send_channel_message(
         self, info: "NuInfo", input: SendChannelMessageInput
     ) -> SendChannelMessageResult:
-
         session = info.context.session
-        async with session.begin() as trans:
-            channel = (
-                await trans.execute(
-                    select(models.Channel).where(models.Channel.id == input.id)
-                )
-            ).scalar_one()
-
-            char = (
-                await trans.execute(
-                    select(models.Character).where(
-                        models.Character.id == input.character_id
-                    )
-                )
-            ).scalar_one()
-            cm = models.ChannelMessage(
-                channel=channel,
-                character=char,
-                message=input.message,
-                timestamp=datetime.now().astimezone(),
+        channel = (
+            await session.execute(
+                select(models.Channel).where(models.Channel.id == input.id)
             )
+        ).scalar_one()
 
-            trans.add(cm)
-            await trans.flush()
-            await trans.execute(text(f"NOTIFY channels, '{cm.id}'"))
+        char = (
+            await session.execute(
+                select(models.Character).where(
+                    models.Character.id == input.character_id
+                )
+            )
+        ).scalar_one()
+        cm = models.ChannelMessage(
+            channel=channel,
+            character=char,
+            message=input.message,
+            timestamp=datetime.now().astimezone(),
+        )
+
+        session.add(cm)
+        await session.flush()
+        await session.execute(text(f"NOTIFY channels, '{cm.id}'"))
         return SendChannelMessageResult(message=types.ChannelMessage.from_orm(cm))
 
 

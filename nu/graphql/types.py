@@ -44,21 +44,17 @@ class Player(BaseType[models.Player]):
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list["Character"]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(
-                select(models.Character).filter(models.Character.player_id == self.id)
-            )
+        result = await session.execute(
+            select(models.Character).filter(models.Character.player_id == self.id)
+        )
         return [Character.from_orm(c) for c in result.scalars().all()]
 
     @strawberry.field
     async def windows(self, info: "NuInfo") -> list["Window"]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(
-                select(models.PlayerWindow).filter(
-                    models.PlayerWindow.player_id == self.id
-                )
-            )
+        result = await session.execute(
+            select(models.PlayerWindow).filter(models.PlayerWindow.player_id == self.id)
+        )
         return [Window.from_orm(w) for w in result.scalars().all()]
 
 
@@ -77,10 +73,9 @@ class Area(BaseType[models.Area]):
     @strawberry.field
     async def rooms(self, info: "NuInfo") -> list[Room]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(
-                select(models.Room).filter(models.Room.area_id == self.id)
-            )
+        result = await session.execute(
+            select(models.Room).filter(models.Room.area_id == self.id)
+        )
 
         return [Room.from_orm(r) for r in result.scalars().all()]
 
@@ -170,36 +165,31 @@ class Channel(BaseType[models.Channel]):
             raise GraphQLError("Cannot specify first and last")
         session = info.context.session
 
-        async with session.begin() as trans:
-            stmt = select(models.ChannelMessage).filter(
-                models.ChannelMessage.channel_id == self.id
-            )
+        stmt = select(models.ChannelMessage).filter(
+            models.ChannelMessage.channel_id == self.id
+        )
 
-            bounds_stmnt = select(
-                func.min(models.ChannelMessage.timestamp),
-                func.max(models.ChannelMessage.timestamp),
-            ).where(models.ChannelMessage.channel_id == self.id)
-            bounds = (await trans.execute(bounds_stmnt)).first()
+        bounds_stmnt = select(
+            func.min(models.ChannelMessage.timestamp),
+            func.max(models.ChannelMessage.timestamp),
+        ).where(models.ChannelMessage.channel_id == self.id)
+        bounds = (await session.execute(bounds_stmnt)).first()
 
-            if after is not None:
-                stmt = stmt.where(
-                    models.ChannelMessage.timestamp > parser.isoparse(after)
-                )
-            if before is not None:
-                stmt = stmt.where(
-                    models.ChannelMessage.timestamp < parser.isoparse(before)
-                )
+        if after is not None:
+            stmt = stmt.where(models.ChannelMessage.timestamp > parser.isoparse(after))
+        if before is not None:
+            stmt = stmt.where(models.ChannelMessage.timestamp < parser.isoparse(before))
 
-            if last is None:
-                stmt = stmt.order_by(models.ChannelMessage.timestamp)
-            else:
-                stmt = stmt.order_by(desc(models.ChannelMessage.timestamp)).limit(last)
+        if last is None:
+            stmt = stmt.order_by(models.ChannelMessage.timestamp)
+        else:
+            stmt = stmt.order_by(desc(models.ChannelMessage.timestamp)).limit(last)
 
-            if first is not None:
-                stmt = stmt.limit(first)
+        if first is not None:
+            stmt = stmt.limit(first)
 
-            result = await trans.execute(stmt)
-            results: list[models.ChannelMessage] = result.scalars().all()
+        result = await session.execute(stmt)
+        results: list[models.ChannelMessage] = result.scalars().all()
 
         if last:
             results.reverse()
@@ -240,13 +230,12 @@ class Channel(BaseType[models.Channel]):
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list[Character]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(
-                select(models.Character)
-                .join(models.Character.character_channels)
-                .join(models.Channel)
-                .where(models.Channel.id == self.id)
-            )
+        result = await session.execute(
+            select(models.Character)
+            .join(models.Character.character_channels)
+            .join(models.Channel)
+            .where(models.Channel.id == self.id)
+        )
         return [Character.from_orm(r) for r in result.scalars().all()]
 
 
@@ -276,10 +265,9 @@ class Window(BaseType[models.PlayerWindow]):
     @strawberry.field
     async def settings(self, info: "NuInfo") -> list[WindowSetting]:
         session = info.context.session
-        async with session.begin() as trans:
-            result = await trans.execute(
-                select(models.PlayerWindowSetting)
-                .join(models.PlayerWindowSetting.window)
-                .where(models.PlayerWindow.id == self.id)
-            )
+        result = await session.execute(
+            select(models.PlayerWindowSetting)
+            .join(models.PlayerWindowSetting.window)
+            .where(models.PlayerWindow.id == self.id)
+        )
         return [WindowSetting.from_orm(c) for c in result.scalars().all()]

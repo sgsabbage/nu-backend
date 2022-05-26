@@ -19,6 +19,7 @@ from nu.models.player import PlayerWindow
 
 
 def init_db() -> None:
+    assert settings.SQLALCHEMY_DATABASE_URI
     engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
     metadata.drop_all(engine)
     metadata.create_all(engine)
