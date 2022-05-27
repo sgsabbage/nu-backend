@@ -1,22 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import strawberry
 import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import AsyncSession
-from strawberry.extensions import Extension
-from strawberry.fastapi import BaseContext, GraphQLRouter
+from strawberry.fastapi import GraphQLRouter
 from strawberry.types import Info
-from strawberry.utils.await_maybe import AwaitableOrValue
 
 from nu import api
 from nu.broadcast import broadcast
-from nu.db.session import SessionLocal
+from nu.context import Context, PlayerContext
 from nu.deps import get_player
-from nu.graphql.loaders import Loaders, get_loaders
+from nu.extensions import TransactionExtension
 from nu.graphql.mutations import Mutation
 from nu.graphql.queries import Query
 from nu.graphql.subscriptions import Subscription
@@ -50,19 +45,7 @@ async def broadcase_disconnect() -> None:
     await broadcast.disconnect()
 
 
-@dataclass
-class PlayerContext(BaseContext):
-    player: Player
-
-
-@dataclass
-class Context(BaseContext):
-    player: Player
-    session: AsyncSession
-    loaders: Loaders
-
-
-NuInfo = Info["Context", "Query"]
+NuInfo = Info[Context, "Query"]
 
 
 async def get_context(
@@ -71,33 +54,11 @@ async def get_context(
     return PlayerContext(player=player)
 
 
-class TestExtension(Extension):
-    async def on_request_start(self) -> AwaitableOrValue[None]:  # type: ignore
-        c: PlayerContext = self.execution_context.context
-        session = SessionLocal()
-        await session.begin()
-
-        context = Context(
-            player=c.player, loaders=get_loaders(session), session=session
-        )
-        context.request = c.request
-        context.background_tasks = c.background_tasks
-        context.response = c.response
-        self.execution_context.context = context
-
-    async def on_request_end(self) -> AwaitableOrValue[None]:  # type: ignore
-        s: AsyncSession = self.execution_context.context.session
-        try:
-            if self.execution_context.errors:
-                await s.rollback()
-            else:
-                await s.commit()
-        finally:
-            await s.close()
-
-
 schema = strawberry.Schema(
-    Query, mutation=Mutation, subscription=Subscription, extensions=[TestExtension]
+    Query,
+    mutation=Mutation,
+    subscription=Subscription,
+    extensions=[TransactionExtension],
 )
 graphql_app = GraphQLRouter(schema=schema, context_getter=get_context)
 app.include_router(graphql_app, prefix="/graphql")
