@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import os
+
 import strawberry
 import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from strawberry.extensions.tracing.opentelemetry import OpenTelemetryExtension
 from strawberry.fastapi import GraphQLRouter
 from strawberry.types import Info
 
@@ -21,7 +25,6 @@ from nu.graphql.subscriptions import Subscription
 from nu.models import Player
 
 # from nu.graphql.loaders import get_loaders
-
 
 app = FastAPI()
 app.add_middleware(
@@ -58,9 +61,21 @@ schema = strawberry.Schema(
     Query,
     mutation=Mutation,
     subscription=Subscription,
-    extensions=[TransactionExtension],
+    extensions=[TransactionExtension, OpenTelemetryExtension],
 )
 graphql_app = GraphQLRouter(schema=schema, context_getter=get_context)
+
+
+def get_graphiql_response() -> HTMLResponse:
+    with open(
+        os.path.dirname(os.path.abspath(__file__)) + "/static/playground.html"
+    ) as f:
+        html = f.read()
+    return HTMLResponse(html)
+
+
+setattr(graphql_app, "get_graphiql_response", get_graphiql_response)
+
 app.include_router(graphql_app, prefix="/graphql")
 
 

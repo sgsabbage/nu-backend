@@ -48,3 +48,12 @@ class Query:
     async def channel(self, info: "NuInfo", id: strawberry.ID) -> types.Channel:
         c = await info.context.loaders.channels.load(UUID(id))
         return types.Channel.from_orm(c)
+
+    @strawberry.field
+    async def windows(self, info: "NuInfo") -> list[types.Window]:
+        result = await info.context.session.execute(
+            select(models.PlayerWindow)
+            .where(models.PlayerWindow.player_id == info.context.player.id)
+            .order_by(models.PlayerWindow.position)
+        )
+        return [types.Window.from_orm(w) for w in result.scalars().all()]

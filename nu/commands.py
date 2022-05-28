@@ -72,7 +72,7 @@ def init_db() -> None:
         height=800,
         top=0,
         left=1000,
-        z=500,
+        position=0,
         component="Map",
         character=c2,
     )
@@ -83,7 +83,7 @@ def init_db() -> None:
         height=400,
         top=400,
         left=0,
-        z=499,
+        position=1,
         character=c2,
     )
     PlayerWindow(
@@ -93,7 +93,7 @@ def init_db() -> None:
         height=400,
         top=0,
         left=0,
-        z=498,
+        position=2,
         component="BulletinBoards",
         character=c,
     )
@@ -104,7 +104,18 @@ def init_db() -> None:
         height=400,
         top=0,
         left=500,
-        z=497,
+        position=3,
+        component="Channels",
+        character=c,
+    )
+    PlayerWindow(
+        player=p,
+        name="Channels2",
+        width=500,
+        height=400,
+        top=400,
+        left=500,
+        position=4,
         component="Channels",
         character=c,
     )
@@ -115,7 +126,7 @@ def init_db() -> None:
         height=400,
         top=0,
         left=500,
-        z=497,
+        position=0,
         component="Channels",
         character=c12,
     )

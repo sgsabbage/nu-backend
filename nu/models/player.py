@@ -3,6 +3,7 @@ from uuid import UUID as PythonUUID
 
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import PasswordType, force_auto_coercion
 
@@ -21,8 +22,12 @@ class Player(Base):
     password: str = Column(PasswordType(schemes=["pbkdf2_sha512"]))
     email = Column(String)
     characters: list["Character"] = relationship("Character", back_populates="player")
-    windows: list["PlayerWindow"] = relationship(
-        "PlayerWindow", back_populates="player", uselist=True
+    windows: OrderingList["PlayerWindow"] = relationship(
+        "PlayerWindow",
+        back_populates="player",
+        uselist=True,
+        order_by="PlayerWindow.position",
+        collection_class=ordering_list("position"),
     )
 
 
@@ -52,7 +57,7 @@ class PlayerWindow(Base):
     height = Column(Integer)
     top = Column(Integer)
     left = Column(Integer)
-    z = Column(Integer)
+    position = Column(Integer)
     component = Column(String)
 
     player_id: PythonUUID = Column(ForeignKey("player.id"))

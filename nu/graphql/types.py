@@ -53,7 +53,9 @@ class Player(BaseType[models.Player]):
     async def windows(self, info: "NuInfo") -> list["Window"]:
         session = info.context.session
         result = await session.execute(
-            select(models.PlayerWindow).filter(models.PlayerWindow.player_id == self.id)
+            select(models.PlayerWindow)
+            .where(models.PlayerWindow.player_id == self.id)
+            .order_by(models.PlayerWindow.position)
         )
         return [Window.from_orm(w) for w in result.scalars().all()]
 
@@ -254,7 +256,6 @@ class Window(BaseType[models.PlayerWindow]):
     height: int
     top: int
     left: int
-    z: int
 
     @strawberry.field
     async def character(self, info: "NuInfo") -> Character | None:

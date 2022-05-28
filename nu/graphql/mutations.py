@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 import strawberry
 from graphql import GraphQLError
 from sqlalchemy import select, text
 from sqlalchemy.exc import InvalidRequestError, StatementError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from nu import models
@@ -15,6 +17,25 @@ if TYPE_CHECKING:
     from nu.main import NuInfo
 
 
+async def get_player_with_windows(
+    player_id: UUID, session: AsyncSession
+) -> models.Player:
+    result = await session.execute(
+        select(models.Player)
+        .options(selectinload(models.Player.windows))
+        .where(models.Player.id == player_id)
+    )
+    p: models.Player = result.scalar_one()
+    return p
+
+
+def get_window_index(player: models.Player, window_id: UUID) -> int | None:
+    for index, w in enumerate(player.windows):
+        if w.id == window_id:
+            return index
+    return None
+
+
 @strawberry.input
 class WindowSettingInput:
     key: str
@@ -23,9 +44,10 @@ class WindowSettingInput:
 
 @strawberry.input
 class UpdateWindowInput:
-    id: strawberry.ID
+    id: UUID
 
-    character_id: strawberry.ID | None = None
+    character_id: UUID | None = None
+    name: str | None = None
     top: int | None = None
     left: int | None = None
     width: int | None = None
@@ -41,7 +63,7 @@ class UpdateWindowResult:
 
 @strawberry.input
 class CloseWindowInput:
-    id: strawberry.ID
+    id: UUID
 
 
 @strawberry.type
@@ -49,10 +71,15 @@ class CloseWindowResult:
     ok: bool
 
 
+@strawberry.type
+class WindowOrderResult:
+    windows: list[types.Window]
+
+
 @strawberry.input
 class SendChannelMessageInput:
-    id: strawberry.ID
-    character_id: strawberry.ID
+    id: UUID
+    character_id: UUID
     message: str
 
 
@@ -89,7 +116,7 @@ class Mutation:
             except (InvalidRequestError, StatementError):
                 raise GraphQLError(f"Character '{input.character_id}' does not exist")
 
-        for arg in ["top", "left", "width", "height", "z"]:
+        for arg in ["top", "left", "width", "height", "name"]:
             if (val := getattr(input, arg)) is not None:
                 setattr(window, arg, val)
         if input.settings is not None:
@@ -101,6 +128,7 @@ class Mutation:
                 session.add(new_setting)
                 settings.append(new_setting)
             window.settings = settings
+        await session.flush()
 
         return UpdateWindowResult(window=types.Window.from_orm(window))
 
@@ -115,6 +143,36 @@ class Mutation:
         window = result.scalar_one()
         await session.delete(window)
         return CloseWindowResult(ok=True)
+
+    @strawberry.mutation
+    async def bring_window_to_front(
+        self, info: "NuInfo", id: UUID
+    ) -> WindowOrderResult:
+
+        session = info.context.session
+        p = await get_player_with_windows(info.context.player.id, session)
+        index = get_window_index(p, id)
+
+        if index is None:
+            raise GraphQLError(f"Window '{id}' does not exist")
+        p.windows.insert(0, p.windows.pop(index))
+        p.windows.reorder()
+        await session.flush()
+        return WindowOrderResult(windows=[types.Window.from_orm(w) for w in p.windows])
+
+    @strawberry.mutation
+    async def send_window_to_back(self, info: "NuInfo", id: UUID) -> WindowOrderResult:
+
+        session = info.context.session
+        p = await get_player_with_windows(info.context.player.id, session)
+        index = get_window_index(p, id)
+
+        if index is None:
+            raise GraphQLError(f"Window '{id}' does not exist")
+        p.windows.append(p.windows.pop(index))
+        p.windows.reorder()
+        await session.flush()
+        return WindowOrderResult(windows=[types.Window.from_orm(w) for w in p.windows])
 
     @strawberry.mutation
     async def send_channel_message(
