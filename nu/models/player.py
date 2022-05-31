@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, List
 from uuid import UUID as PythonUUID
 
@@ -11,6 +13,7 @@ from nu.db.base_class import Base
 
 if TYPE_CHECKING:
     from nu.models.channel import Channel, ChannelCharacter
+    from nu.models.map import Room
 
 force_auto_coercion()
 
@@ -36,6 +39,11 @@ class Character(Base):
     base_color = Column(String)
     player_id: PythonUUID = Column(ForeignKey("player.id"))
     player: Player = relationship("Player", back_populates="characters", uselist=False)
+
+    current_room_id: PythonUUID = Column(ForeignKey("room.id"))
+    current_room: Room = relationship(
+        "Room", back_populates="characters", uselist=False
+    )
 
     character_channels: list["ChannelCharacter"] = relationship(
         "ChannelCharacter", back_populates="character", uselist=True

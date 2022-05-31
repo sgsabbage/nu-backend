@@ -66,6 +66,12 @@ class Character(BaseType[models.Character]):
     name: str
     base_color: str | None
 
+    @strawberry.field
+    async def current_room(self, info: "NuInfo") -> Room:
+        return Room.from_orm(
+            await info.context.loaders.rooms.load(self._model.current_room_id)
+        )
+
 
 @strawberry.type
 class Area(BaseType[models.Area]):
@@ -86,6 +92,7 @@ class Area(BaseType[models.Area]):
 class Room(BaseType[models.Room]):
     id: strawberry.ID
     name: str
+    description: str | None
     x: int
     y: int
     # exits = graphene.List(graphene.NonNull(lambda: Exit), required=True)

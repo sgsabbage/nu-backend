@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from uuid import UUID as PythonUUID
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from nu.db.base_class import Base
+
+if TYPE_CHECKING:
+    from nu.models import Character
 
 
 class Area(Base):
@@ -14,9 +20,14 @@ class Area(Base):
 
 class Room(Base):
     name = Column(String)
+    description = Column(String)
 
     area_id: PythonUUID = Column(ForeignKey("area.id"))
     area: Area = relationship("Area", back_populates="rooms", uselist=False)
+
+    characters: list[Character] = relationship(
+        "Character", back_populates="current_room", uselist=True
+    )
 
     x = Column(Integer)
     y = Column(Integer)

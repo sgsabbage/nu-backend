@@ -40,11 +40,22 @@ def init_db() -> None:
 
     london = Area(name="London")
     centre = Room(name="City Centre", area=london, x=0, y=0)
-    north = Room(name="North London", area=london, x=0, y=-1)
+    north = Room(
+        name="North London",
+        description="This is North London. It looks very north.",
+        area=london,
+        x=0,
+        y=-1,
+    )
     south = Room(name="South London", area=london, x=0, y=1)
     east = Room(name="East London", area=london, x=-1, y=0)
     west = Room(name="West London", area=london, x=1, y=0)
     secret = Room(name="Secret London", area=london, x=0, y=4)
+
+    c.current_room = south
+    c2.current_room = north
+    c3.current_room = west
+    c12.current_room = north
 
     Exit(start_room=centre, end_room=north, name="North")
     Exit(start_room=centre, end_room=south, name="South")
@@ -118,6 +129,17 @@ def init_db() -> None:
         position=4,
         component="Channels",
         character=c,
+    )
+    PlayerWindow(
+        player=p,
+        name="Character",
+        width=500,
+        height=400,
+        top=0,
+        left=500,
+        position=5,
+        component="Character",
+        character=c2,
     )
     PlayerWindow(
         player=p2,

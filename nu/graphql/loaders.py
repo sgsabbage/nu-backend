@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.dataloader import DataLoader
 
 from nu.models import Area, Channel, Character
+from nu.models.map import Room
 
 
 def load_characters(
@@ -44,11 +45,23 @@ def load_channels(
     return lookup
 
 
+def load_rooms(
+    session: AsyncSession,
+) -> Callable[[list[UUID]], Coroutine[Any, Any, list[Room | ValueError]]]:
+    async def lookup(keys: list[UUID]) -> list[Room | ValueError]:
+        result = await session.execute(select(Room).filter(Room.id.in_(keys)))
+        rooms = result.scalars().all()
+        return [next((r for r in rooms if r.id == k), ValueError()) for k in keys]
+
+    return lookup
+
+
 @dataclass
 class Loaders:
     characters: DataLoader[UUID, Character]
     areas: DataLoader[UUID, Area]
     channels: DataLoader[UUID, Channel]
+    rooms: DataLoader[UUID, Room]
 
 
 def get_loaders(session: AsyncSession) -> Loaders:
@@ -56,4 +69,5 @@ def get_loaders(session: AsyncSession) -> Loaders:
         characters=DataLoader(load_fn=load_characters(session)),
         areas=DataLoader(load_fn=load_areas(session)),
         channels=DataLoader(load_fn=load_channels(session)),
+        rooms=DataLoader(load_fn=load_rooms(session)),
     )

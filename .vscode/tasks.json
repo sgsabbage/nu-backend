@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
+            "label": "Initialise DB",
             "type": "shell",
-            "command": "echo Hello"
+            "command": "init_db"
         }
     ]
 }
