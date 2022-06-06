@@ -1,5 +1,5 @@
 from asyncio import CancelledError
-from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterator
+from typing import TYPE_CHECKING, AsyncGenerator
 
 import strawberry
 from sqlalchemy import select
