@@ -24,8 +24,8 @@ class Subscription:
             try:
                 async for event in subscriber:
                     async with SessionLocal.begin() as session:
-                        # TODO: This should be more elegant becuase I don't want to do this
-                        # for every subscriber
+                        # TODO: This should be more elegant becuase I don't want to do
+                        # this for every subscriber
                         info.context.loaders = get_loaders(session)
                         message_id = event.message
                         result = await session.execute(
