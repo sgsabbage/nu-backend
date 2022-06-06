@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, AsyncIterator
+from asyncio import CancelledError
+from typing import TYPE_CHECKING, AsyncGenerator, AsyncIterator
 
 import strawberry
 from sqlalchemy import select
@@ -16,17 +17,23 @@ if TYPE_CHECKING:
 @strawberry.type
 class Subscription:
     @strawberry.subscription
-    async def channel_messages(self, info: "NuInfo") -> AsyncIterator[ChannelMessage]:
+    async def channel_messages(
+        self, info: "NuInfo"
+    ) -> AsyncGenerator[ChannelMessage | None, None]:
         async with broadcast.subscribe(channel="channels") as subscriber:
-            async for event in subscriber:
-                async with SessionLocal.begin() as session:
-                    # TODO: This should be more elegant becuase I don't want to do this
-                    # for every subscriber
-                    info.context.loaders = get_loaders(session)
-                    message_id = event.message
-                    result = await session.execute(
-                        select(models.ChannelMessage).where(
-                            models.ChannelMessage.id == message_id
+            try:
+                async for event in subscriber:
+                    async with SessionLocal.begin() as session:
+                        # TODO: This should be more elegant becuase I don't want to do this
+                        # for every subscriber
+                        info.context.loaders = get_loaders(session)
+                        message_id = event.message
+                        result = await session.execute(
+                            select(models.ChannelMessage).where(
+                                models.ChannelMessage.id == message_id
+                            )
                         )
-                    )
-                    yield ChannelMessage.from_orm(result.scalar_one())
+                        yield ChannelMessage.from_orm(result.scalar_one())
+            except CancelledError:
+                pass
+        yield None
