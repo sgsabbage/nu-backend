@@ -20,5 +20,12 @@
 		"EditorConfig.EditorConfig"
 	],
 	"remoteUser": "vscode",
-	"postCreateCommand": "poetry install"
+	"postCreateCommand": "poetry install",
+	"features": {
+		"docker-from-docker": {
+			"version": "latest",
+			"moby": true,
+			"dockerDashComposeVersion": "v3"
+		}
+	}
 }

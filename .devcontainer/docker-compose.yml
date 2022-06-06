@@ -25,6 +25,7 @@ services:
       - nu-backend-vscode:/home/vscode/.vscode-server/extensions
       # And/or for VS Code Insiders
       - nu-backend-vscode-insiders:/home/vscode/.vscode-server-insiders/extensions
+      - /var/run/docker.sock:/var/run/docker-host.sock
 
     ports:
       - "8000:8000"
