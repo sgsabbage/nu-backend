@@ -88,6 +88,19 @@ class SendChannelMessageResult:
     message: types.ChannelMessage
 
 
+@strawberry.input
+class UpdateRoomInput:
+    id: UUID
+
+    name: str | None = None
+    description: str | None = None
+
+
+@strawberry.type
+class UpdateRoomResult:
+    room: types.Room
+
+
 @strawberry.type
 class Mutation:
     @strawberry.mutation
@@ -203,6 +216,35 @@ class Mutation:
         await session.flush()
         await session.execute(text(f"NOTIFY channels, '{cm.id}'"))
         return SendChannelMessageResult(message=types.ChannelMessage.from_orm(cm))
+
+    @strawberry.mutation
+    async def update_room(
+        self, info: "NuInfo", input: UpdateRoomInput
+    ) -> UpdateRoomResult:
+        session = info.context.session
+        room: models.Room = (
+            await session.execute(
+                select(models.Room)
+                .options(selectinload(models.Room.characters))
+                .where(models.Room.id == input.id)
+            )
+        ).scalar_one()
+
+        if input.description:
+            room.description = input.description
+        if input.name:
+            room.name = input.name
+
+        players = set()
+        for char in room.characters:
+            players.add(char.player_id)
+
+        for player_id in players:
+            await session.execute(
+                text(f"SELECT pg_notify('room-{player_id}', '{room.id}')")
+            )
+
+        return UpdateRoomResult(room=types.Room.from_orm(room))
 
 
 # class SendChannelMessage(graphene.Mutation):

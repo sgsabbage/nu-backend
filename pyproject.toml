@@ -16,7 +16,7 @@ SQLAlchemy-Utils = "^0.38.2"
 cryptography = "^36.0.1"
 passlib = "^1.7.4"
 python-jose = "^3.2.0"
-broadcaster = {git = "https://github.com/encode/broadcaster.git", rev = "435c35e"}
+broadcaster = {git = "https://github.com/sgsabbage/broadcaster.git", rev = "8e27c4e"}
 promise = "^2.3"
 python-dateutil = "^2.8.2"
 strawberry-graphql = {extras = ["opentelemetry"], version = "^0.114.0"}
@@ -32,6 +32,7 @@ autoflake = "^1.4"
 pytest-cov = "^3.0.0"
 pytest-asyncio = "^0.18.3"
 types-python-dateutil = "^2.8.16"
+ipython = "^8.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

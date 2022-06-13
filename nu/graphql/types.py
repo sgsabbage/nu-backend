@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 from typing import TYPE_CHECKING, Generic, TypeVar
+from uuid import UUID
 
 import strawberry
 from dateutil import parser
@@ -95,29 +96,40 @@ class Room(BaseType[models.Room]):
     description: str | None
     x: int
     y: int
-    # exits = graphene.List(graphene.NonNull(lambda: Exit), required=True)
+
+    @strawberry.field
+    async def exits(self, info: "NuInfo") -> list[Exit]:
+        session = info.context.session
+        result = await session.execute(
+            select(models.Exit).filter(models.Exit.start_room_id == self.id)
+        )
+        return [Exit.from_orm(c) for c in result.scalars().all()]
 
     @strawberry.field
     async def area(self, info: "NuInfo") -> Area:
         return Area.from_orm(await info.context.loaders.areas.load(self._model.area_id))
 
-
-#     @staticmethod
-#     async def resolve_exits(root, info) -> models.Room:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Exit).filter(models.Exit.start_room_id == root.id)
-#         )
-
-#         return result.scalars().all()
+    @strawberry.field
+    async def characters(self, info: "NuInfo") -> list[Character]:
+        session = info.context.session
+        result = await session.execute(
+            select(models.Character).filter(models.Character.current_room_id == self.id)
+        )
+        return [Character.from_orm(c) for c in result.scalars().all()]
 
 
-# class Exit(graphene.ObjectType):
-#     id = graphene.ID(required=True)
-#     name = graphene.String(required=True)
-#     start_room = graphene.Field(Room, required=True)
-#     end_room = graphene.Field(Room, required=True)
-#     secret = graphene.Boolean(required=True)
+@strawberry.type
+class Exit(BaseType[models.Exit]):
+    id: UUID
+    name: str | None
+    secret: bool
+
+    @strawberry.field
+    async def end_room(self, info: "NuInfo") -> Room:
+        return Room.from_orm(
+            await info.context.loaders.rooms.load(self._model.end_room_id)
+        )
+
 
 #     @staticmethod
 #     async def resolve_start_room(root, info) -> models.Room:

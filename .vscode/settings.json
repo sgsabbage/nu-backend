@@ -6,6 +6,11 @@
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": true,
     "python.linting.mypyEnabled": true,
+    "python.terminal.launchArgs": [
+        "-m",
+        "IPython",
+        "--no-autoindent",
+    ],
     "[python]": {
         "editor.codeActionsOnSave": {
             "source.organizeImports": true
