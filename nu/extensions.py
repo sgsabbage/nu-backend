@@ -14,7 +14,7 @@ class TransactionExtension(Extension):
         await session.begin()
 
         context = Context(
-            player=c.player, loaders=get_loaders(session), session=session
+            player=c.player, loaders=get_loaders(session, c.player), session=session
         )
         context.request = c.request
         context.background_tasks = c.background_tasks

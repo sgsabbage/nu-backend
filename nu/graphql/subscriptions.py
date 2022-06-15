@@ -27,7 +27,7 @@ async def subscribe(
         try:
             async for event in subscriber:
                 async with SessionLocal.begin() as session:
-                    info.context.loaders = get_loaders(session)
+                    info.context.loaders = get_loaders(session, info.context.player)
                     yield await fn(event, session)
         except CancelledError:
             pass

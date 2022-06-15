@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 from uuid import UUID
 
 import strawberry
@@ -68,10 +68,8 @@ class Character(BaseType[models.Character]):
     base_color: str | None
 
     @strawberry.field
-    async def current_room(self, info: "NuInfo") -> Room:
-        return Room.from_orm(
-            await info.context.loaders.rooms.load(self._model.current_room_id)
-        )
+    async def current_room(self, info: "NuInfo") -> Optional[Room]:
+        return await info.context.loaders.rooms.by_id(self._model.current_room_id)
 
 
 @strawberry.type
@@ -81,12 +79,7 @@ class Area(BaseType[models.Area]):
 
     @strawberry.field
     async def rooms(self, info: "NuInfo") -> list[Room]:
-        session = info.context.session
-        result = await session.execute(
-            select(models.Room).filter(models.Room.area_id == self.id)
-        )
-
-        return [Room.from_orm(r) for r in result.scalars().all()]
+        return await info.context.loaders.rooms.by_area(self._model)
 
 
 @strawberry.type
@@ -125,27 +118,12 @@ class Exit(BaseType[models.Exit]):
     secret: bool
 
     @strawberry.field
-    async def end_room(self, info: "NuInfo") -> Room:
-        return Room.from_orm(
-            await info.context.loaders.rooms.load(self._model.end_room_id)
-        )
+    async def start_room(self, info: "NuInfo") -> Optional[Room]:
+        return await info.context.loaders.rooms.by_id(self._model.start_room_id)
 
-
-#     @staticmethod
-#     async def resolve_start_room(root, info) -> models.Room:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Room).filter(models.Room.id == root.start_room_id)
-#         )
-#         return result.scalar_one()
-
-#     @staticmethod
-#     async def resolve_end_room(root, info) -> models.Room:
-#         session = info.context["session"]
-#         result = await session.execute(
-#             select(models.Room).filter(models.Room.id == root.end_room_id)
-#         )
-#         return result.scalar_one()
+    @strawberry.field
+    async def end_room(self, info: "NuInfo") -> Optional[Room]:
+        return await info.context.loaders.rooms.by_id(self._model.end_room_id)
 
 
 @strawberry.type

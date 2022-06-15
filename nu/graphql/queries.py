@@ -34,9 +34,7 @@ class Query:
 
     @strawberry.field
     async def rooms(self, info: "NuInfo") -> list[types.Room]:
-        session = info.context.session
-        result = await session.execute(select(models.Room))
-        return [types.Room.from_orm(r) for r in result.scalars().all()]
+        return await info.context.loaders.rooms.all()
 
     @strawberry.field
     async def channels(self, info: "NuInfo") -> list[types.Channel]:
