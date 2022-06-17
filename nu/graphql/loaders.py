@@ -1,60 +1,46 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Coroutine, Generic, Optional, TypeVar
+from abc import ABC, abstractmethod
+from typing import Any, Callable, Coroutine, Generic, Optional, Type, TypeVar
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.util import asyncio
 from strawberry.dataloader import DataLoader
 
 import nu.graphql.types as types
-from nu.models import Area, Channel, Character
-from nu.models.map import Room
-from nu.models.player import Player
+import nu.models as models
+from nu.db.base_class import Base
 
 
-def load_characters(
-    session: AsyncSession,
-) -> Callable[[list[UUID]], Coroutine[Any, Any, list[Character | None]]]:
-    async def lookup(keys: list[UUID]) -> list[Character | None]:
-        result = await session.execute(select(Character).filter(Character.id.in_(keys)))
-        chars = result.scalars().all()
-        return [next((c for c in chars if c.id == k), None) for k in keys]
-
-    return lookup
+class Loaders:
+    def __init__(self, session: AsyncSession, viewer: models.Player):
+        self.session = session
+        self.viewer = viewer
+        self.rooms = RoomLoader(session, viewer)
+        self.characters = CharacterLoader(session, viewer)
 
 
-def load_areas(
-    session: AsyncSession,
-) -> Callable[[list[UUID]], Coroutine[Any, Any, list[Area | None]]]:
-    async def lookup(keys: list[UUID]) -> list[Area | None]:
-        result = await session.execute(select(Area).filter(Area.id.in_(keys)))
-        areas = result.scalars().all()
-        return [next((a for a in areas if a.id == k), None) for k in keys]
-
-    return lookup
+def get_loaders(session: AsyncSession, viewer: models.Player) -> Loaders:
+    return Loaders(session, viewer)
 
 
-def load_channels(
-    session: AsyncSession,
-) -> Callable[[list[UUID]], Coroutine[Any, Any, list[Channel | None]]]:
-    async def lookup(keys: list[UUID]) -> list[Channel | None]:
-        result = await session.execute(select(Channel).filter(Channel.id.in_(keys)))
-        channels = result.scalars().all()
-        return [next((c for c in channels if c.id == k), None) for k in keys]
-
-    return lookup
+M = TypeVar("M", bound=Base)
+T = TypeVar("T", bound=types.BaseType)  # type: ignore
 
 
-def load_rooms(
-    session: AsyncSession,
-) -> Callable[[list[UUID]], Coroutine[Any, Any, list[Room | ValueError]]]:
-    async def lookup(keys: list[UUID]) -> list[Room | ValueError]:
-        result = await session.execute(select(Room).filter(Room.id.in_(keys)))
-        rooms = result.scalars().all()
+def loader_function(
+    type_class: Type[M], session: AsyncSession
+) -> Callable[[list[UUID]], Coroutine[Any, Any, list[M | ValueError]]]:
+    async def lookup(keys: list[UUID]) -> list[M | ValueError]:
+        result = await session.execute(
+            select(type_class).filter(type_class.id.in_(keys))
+        )
+        rows = result.scalars().all()
         return [
             next(
-                (r for r in rooms if r.id == k),
+                (r for r in rows if r.id == k),
                 ValueError(f"{k} does not exist"),
             )
             for k in keys
@@ -63,55 +49,81 @@ def load_rooms(
     return lookup
 
 
-class Loaders:
-    characters: DataLoader[UUID, Character]
-    areas: DataLoader[UUID, Area]
-    channels: DataLoader[UUID, Channel]
+class BaseLoader(ABC, Generic[M, T]):
+    model: Type[M]
+    type: Type[T]
 
-    def __init__(self, session: AsyncSession, viewer: Player):
-        self.session = session
-        self.viewer = viewer
-        self.rooms = RoomLoader(session, viewer, load_rooms)
-
-
-def get_loaders(session: AsyncSession, viewer: Player) -> Loaders:
-    return Loaders(session, viewer)
-
-
-T = TypeVar("T")
-
-
-class BaseLoader(Generic[T]):
     def __init__(
         self,
         session: AsyncSession,
-        viewer: Player,
-        loader_fn: Callable[
-            [AsyncSession],
-            Callable[[list[UUID]], Coroutine[Any, Any, list[T | ValueError]]],
-        ],
+        viewer: models.Player,
     ):
         self.session = session
         self.viewer = viewer
-        self.loader = DataLoader[UUID, T](load_fn=loader_fn(session))
+        self.loader = DataLoader[UUID, M](load_fn=loader_function(self.model, session))
+
+    async def by_id(self, id: UUID) -> Optional[T]:
+        obj = await self.loader.load(id)
+        return self.type.from_orm(obj) if await self.can_see(obj) else None
+
+    @abstractmethod
+    async def can_see(self, obj: M) -> bool:
+        ...
 
 
-class RoomLoader(BaseLoader[types.Room]):
+class RoomLoader(BaseLoader[models.Room, types.Room]):
+    model = models.Room
+    type = types.Room
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._room_lock = asyncio.Lock()
+        self._room_done = False
+        self._known_rooms: list[models.Room] = []
+
     async def all(self) -> list[types.Room]:
-        result = await self.session.execute(select(Room))
+        result = await self.session.execute(select(models.Room))
         rooms = result.scalars().all()
 
-        return [types.Room.from_orm(r) for r in rooms if self.can_see(r)]
+        return [types.Room.from_orm(r) for r in rooms if await self.can_see(r)]
 
-    async def by_id(self, id: UUID) -> Optional[types.Room]:
-        room = await self.loader.load(id)
-        return types.Room.from_orm(room) if self.can_see(room) else None
-
-    async def by_area(self, area: Area) -> list[types.Room]:
-        result = await self.session.execute(select(Room).where(Room.area_id == area.id))
+    async def by_area(self, area: models.Area) -> list[types.Room]:
+        result = await self.session.execute(
+            select(models.Room).where(models.Room.area_id == area.id)
+        )
         rooms = result.scalars().all()
 
-        return [types.Room.from_orm(r) for r in rooms if self.can_see(r)]
+        return [types.Room.from_orm(r) for r in rooms if await self.can_see(r)]
 
-    def can_see(self, room: Room) -> bool:
-        return False
+    async def can_see(self, obj: models.Room) -> bool:
+        if obj not in await self.known_rooms:
+            return False
+        return True
+
+    @property
+    async def known_rooms(self) -> list[models.Room]:
+        async with self._room_lock:
+            if not self._room_done:
+                self._known_rooms = (
+                    (await self.session.execute(select(models.Room))).scalars().all()
+                )
+                self._room_done = True
+            return self._known_rooms
+
+
+class CharacterLoader(BaseLoader[models.Character, types.Character]):
+    model = models.Character
+    type = types.Character
+
+    async def all(self) -> list[types.Character]:
+        result = await self.session.execute(select(models.Character))
+        chars = result.scalars().all()
+
+        return [types.Character.from_orm(c) for c in chars if self.can_see(c)]
+
+    async def by_id(self, id: UUID) -> Optional[types.Character]:
+        char = await self.loader.load(id)
+        return types.Character.from_orm(char) if self.can_see(char) else None
+
+    async def can_see(self, obj: models.Character) -> bool:
+        return True

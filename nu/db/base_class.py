@@ -1,4 +1,5 @@
 import re
+from enum import Enum
 from typing import Any
 
 from sqlalchemy import Column, MetaData
@@ -35,3 +36,11 @@ class Base:
         name = cls.__name__
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
+
+class AutoName(Enum):
+    @staticmethod
+    def _generate_next_value_(
+        name: str, start: int, count: int, last_values: list[Any]
+    ) -> str:
+        return name

@@ -15,6 +15,7 @@ from nu.models import (
     Player,
     Room,
 )
+from nu.models.map import RoomStatus
 from nu.models.player import PlayerWindow
 
 
@@ -26,7 +27,7 @@ def init_db() -> None:
     to_add = []
     p = Player(username="Ifrit", password="p123", email="notanemail@example.com")
     c = Character(name="Afanc", player=p, base_color="#007ea8")
-    c3 = Character(name="Ifrit", player=p, base_color="#804000")
+    c3 = Character(name="Ifrit", player=p, admin=True, base_color="#804000")
     c2 = Character(name="Rathenhope", player=p)
 
     p2 = Player(username="Player", password="p123", email="notanemail2@example.com")
@@ -39,18 +40,22 @@ def init_db() -> None:
     plotting = Channel(name="Plotting", description="A channel for plots")
 
     london = Area(name="London")
-    centre = Room(name="City Centre", area=london, x=0, y=0)
+    private_club = Room(
+        name="Private Club", status=RoomStatus.PRIVATE, area=london, x=0, y=-2
+    )
+    centre = Room(name="City Centre", status=RoomStatus.PUBLIC, area=london, x=0, y=0)
     north = Room(
         name="North London",
         description="This is North London. It looks very north.",
+        status=RoomStatus.PUBLIC,
         area=london,
         x=0,
         y=-1,
     )
-    south = Room(name="South London", area=london, x=0, y=1)
-    east = Room(name="East London", area=london, x=-1, y=0)
-    west = Room(name="West London", area=london, x=1, y=0)
-    secret = Room(name="Secret London", area=london, x=0, y=4)
+    south = Room(name="South London", status=RoomStatus.PUBLIC, area=london, x=0, y=1)
+    east = Room(name="East London", status=RoomStatus.PUBLIC, area=london, x=-1, y=0)
+    west = Room(name="West London", status=RoomStatus.PUBLIC, area=london, x=1, y=0)
+    secret = Room(name="Secret London", status=RoomStatus.SECRET, area=london, x=0, y=4)
 
     c.current_room = south
     c2.current_room = north
@@ -64,8 +69,9 @@ def init_db() -> None:
     Exit(start_room=south, end_room=secret, name="SECRET", secret=True)
     Exit(start_room=west, end_room=north, name="shortcut")
     Exit(start_room=east, end_room=south, secret=True, name="shortcut")
+    Exit(start_room=north, end_room=private_club, name="club")
 
-    to_add.extend([pub, admin, plotting, london, centre, north])
+    to_add.extend([pub, admin, plotting, london, centre, north, private_club])
 
     to_add.append(ChannelCharacter(character=c, channel=admin))
     to_add.append(ChannelCharacter(character=c, channel=pub))

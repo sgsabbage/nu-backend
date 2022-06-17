@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from enum import auto
 from typing import TYPE_CHECKING
 from uuid import UUID as PythonUUID
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from nu.db.base_class import Base
+from nu.db.base_class import AutoName, Base
 
 if TYPE_CHECKING:
     from nu.models import Character
@@ -18,12 +19,20 @@ class Area(Base):
     rooms: list["Room"] = relationship("Room", back_populates="area", uselist=True)
 
 
+class RoomStatus(AutoName):
+    PRIVATE = auto()
+    SECRET = auto()
+    PUBLIC = auto()
+
+
 class Room(Base):
     name = Column(String)
     description = Column(String)
 
     area_id: PythonUUID = Column(ForeignKey("area.id"))
     area: Area = relationship("Area", back_populates="rooms", uselist=False)
+
+    status = Column(Enum(RoomStatus), default=RoomStatus.PRIVATE)
 
     characters: list[Character] = relationship(
         "Character", back_populates="current_room", uselist=True

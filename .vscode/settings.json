@@ -29,6 +29,11 @@
             "sqlalchemy",
             4,
             false
+        ],
+        [
+            "nu",
+            5,
+            false
         ]
     ],
     "python.terminal.activateEnvInCurrentTerminal": true,
