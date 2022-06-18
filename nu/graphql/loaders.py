@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import with_parent
 from sqlalchemy.util import asyncio
 from strawberry.dataloader import DataLoader
 
@@ -20,6 +21,7 @@ class Loaders:
         self.viewer = viewer
         self.rooms = RoomLoader(session, viewer)
         self.characters = CharacterLoader(session, viewer)
+        self.channels = ChannelLoader(session, viewer)
 
 
 def get_loaders(session: AsyncSession, viewer: models.Player) -> Loaders:
@@ -104,6 +106,7 @@ class RoomLoader(BaseLoader[models.Room, types.Room]):
     async def known_rooms(self) -> list[models.Room]:
         async with self._room_lock:
             if not self._room_done:
+                # TODO: Tie this back to the correct known rooms list
                 self._known_rooms = (
                     (await self.session.execute(select(models.Room))).scalars().all()
                 )
@@ -119,11 +122,25 @@ class CharacterLoader(BaseLoader[models.Character, types.Character]):
         result = await self.session.execute(select(models.Character))
         chars = result.scalars().all()
 
-        return [types.Character.from_orm(c) for c in chars if self.can_see(c)]
+        return [types.Character.from_orm(c) for c in chars if await self.can_see(c)]
 
-    async def by_id(self, id: UUID) -> Optional[types.Character]:
-        char = await self.loader.load(id)
-        return types.Character.from_orm(char) if self.can_see(char) else None
+    async def by_player(self, player: models.Player) -> list[types.Character]:
+        result = await self.session.execute(
+            select(models.Character).where(
+                with_parent(player, models.Player.characters)
+            )
+        )
+        chars = result.scalars().all()
+
+        return [types.Character.from_orm(c) for c in chars if await self.can_see(c)]
 
     async def can_see(self, obj: models.Character) -> bool:
+        return True
+
+
+class ChannelLoader(BaseLoader[models.Channel, types.Channel]):
+    model = models.Channel
+    type = types.Channel
+
+    async def can_see(self, obj: models.Channel) -> bool:
         return True

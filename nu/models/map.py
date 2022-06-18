@@ -12,6 +12,8 @@ from nu.db.base_class import AutoName, Base
 if TYPE_CHECKING:
     from nu.models import Character
 
+__all__ = ["Area", "Room", "RoomStatus", "Exit"]
+
 
 class Area(Base):
     name = Column(String)

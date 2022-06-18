@@ -45,11 +45,7 @@ class Player(BaseType[models.Player]):
 
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list["Character"]:
-        session = info.context.session
-        result = await session.execute(
-            select(models.Character).filter(models.Character.player_id == self.id)
-        )
-        return [Character.from_orm(c) for c in result.scalars().all()]
+        return await info.context.loaders.characters.by_player(self._model)
 
     @strawberry.field
     async def windows(self, info: "NuInfo") -> list["Window"]:
@@ -138,10 +134,8 @@ class ChannelMessage(BaseType[models.ChannelMessage]):
         return await info.context.loaders.characters.by_id(self._model.character_id)
 
     @strawberry.field
-    async def channel(self, info: "NuInfo") -> Channel:
-        return Channel.from_orm(
-            await info.context.loaders.channels.load(self._model.channel_id)
-        )
+    async def channel(self, info: "NuInfo") -> Optional[Channel]:
+        return await info.context.loaders.channels.by_id(self._model.channel_id)
 
 
 @strawberry.type
