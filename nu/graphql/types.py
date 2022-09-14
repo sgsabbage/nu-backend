@@ -96,10 +96,6 @@ class Room(BaseType[models.Room]):
         return [Exit.from_orm(c) for c in result.scalars().all()]
 
     @strawberry.field
-    async def area(self, info: "NuInfo") -> Area:
-        return Area.from_orm(await info.context.loaders.areas.load(self._model.area_id))
-
-    @strawberry.field
     async def characters(self, info: "NuInfo") -> list[Character]:
         session = info.context.session
         result = await session.execute(

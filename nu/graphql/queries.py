@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from uuid import UUID
 
 import strawberry
 from sqlalchemy import select
@@ -42,10 +41,10 @@ class Query:
         result = await session.execute(select(models.Channel))
         return [types.Channel.from_orm(r) for r in result.scalars().all()]
 
-    @strawberry.field
-    async def channel(self, info: "NuInfo", id: strawberry.ID) -> types.Channel:
-        c = await info.context.loaders.channels.load(UUID(id))
-        return types.Channel.from_orm(c)
+    # @strawberry.field
+    # async def channel(self, info: "NuInfo", id: strawberry.ID) -> types.Channel:
+    #     c = await info.context.loaders.channels.by_id(UUID(id))
+    #     return types.Channel.from_orm(c) if c else None
 
     @strawberry.field
     async def windows(self, info: "NuInfo") -> list[types.Window]:
