@@ -25,6 +25,4 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install Nu
         run: poetry install --no-interaction
-      - run: pip install poetry
-      - run: poetry install
       - run: poetry run scripts/lint.sh
