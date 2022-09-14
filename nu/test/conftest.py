@@ -32,7 +32,6 @@ async def session_db() -> AsyncGenerator[AsyncConnection, None]:
         await conn.exec_driver_sql("ROLLBACK")
         await conn.exec_driver_sql("DROP DATABASE IF EXISTS test")
         await conn.exec_driver_sql("CREATE DATABASE test")
-        await conn.exec_driver_sql('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
 
     await engine_admin.dispose()
 
@@ -40,6 +39,7 @@ async def session_db() -> AsyncGenerator[AsyncConnection, None]:
     engine = create_async_engine(test_db, pool_pre_ping=True, future=True, echo=False)
 
     async with engine.begin() as conn:
+        await conn.exec_driver_sql('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
         await conn.run_sync(metadata.create_all)
 
     async with engine.connect() as conn:
