@@ -45,8 +45,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        volumes:
-          - ${{ github.workspace }}/db/pg_init.sh:/docker-entrypoint-initdb.d/pg_init.sh
     steps:
       - uses: actions/checkout@v3
         with:
@@ -68,5 +66,7 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install Nu
         run: poetry install --no-interaction
-      # - run: poetry run pytest
+      - name: Update postgres
+        run: psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+      - run: poetry run pytest
     
