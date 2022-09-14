@@ -30,7 +30,7 @@ jobs:
     container: python:3.10
     env:
       POSTGRES_USER: postgres
-      POSTGRES_DB: app
+      POSTGRES_DB: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_SERVER: postgres
     services:
@@ -38,7 +38,7 @@ jobs:
         image: postgres
         env:
           POSTGRES_USER: postgres
-          POSTGRES_DB: app
+          POSTGRES_DB: postgres
           POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
