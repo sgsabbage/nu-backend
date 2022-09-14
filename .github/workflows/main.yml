@@ -3,6 +3,7 @@ on: [push]
 jobs:
   lint:
     runs-on: ubuntu-latest
+    container: python:3.10
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -29,6 +30,7 @@ jobs:
   
   test:
     runs-on: ubuntu-latest
+    container: python:3.10
     env:
       POSTGRES_USER: postgres
       POSTGRES_DB: app
