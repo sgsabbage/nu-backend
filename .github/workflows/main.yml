@@ -68,5 +68,5 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install Nu
         run: poetry install --no-interaction
-      - run: poetry run pytest
+      # - run: poetry run pytest
     
