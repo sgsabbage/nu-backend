@@ -66,7 +66,5 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install Nu
         run: poetry install --no-interaction
-      - name: Update postgres
-        run: psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
       - run: poetry run pytest
     

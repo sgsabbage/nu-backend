@@ -32,6 +32,7 @@ async def session_db() -> AsyncGenerator[AsyncConnection, None]:
         await conn.exec_driver_sql("ROLLBACK")
         await conn.exec_driver_sql("DROP DATABASE IF EXISTS test")
         await conn.exec_driver_sql("CREATE DATABASE test")
+        await conn.exec_driver_sql('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
 
     await engine_admin.dispose()
 
