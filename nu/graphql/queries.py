@@ -1,15 +1,36 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from ast import Call
+from functools import wraps
+from typing import TYPE_CHECKING, Callable, ParamSpec, TypeVar
 
 import strawberry
 from sqlalchemy import select
 
 import nu.graphql.types as types
 import nu.models as models
+from nu.models.player import Permission
+
+P = ParamSpec("P")
+R = TypeVar("R")
+
 
 if TYPE_CHECKING:
     from nu.main import NuInfo
+
+
+def protected(
+    permissions: list[Permission],
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    def outer(f: Callable[P, R]) -> Callable[P, R]:
+        @wraps(f)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            print(kwargs)
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return outer
 
 
 async def get_current_player(info: "NuInfo") -> types.Player:
@@ -18,6 +39,13 @@ async def get_current_player(info: "NuInfo") -> types.Player:
         select(models.Player).where(models.Player.id == info.context.player.id)
     )
     return types.Player.from_orm(result.scalar_one())
+
+
+@protected(permissions=[Permission.CHANNEL_CREATE])
+async def get_channels(info: "NuInfo") -> list[types.Channel]:
+    session = info.context.session
+    result = await session.execute(select(models.Channel))
+    return [types.Channel.from_orm(r) for r in result.scalars().all()]
 
 
 @strawberry.type
@@ -35,11 +63,7 @@ class Query:
     async def rooms(self, info: "NuInfo") -> list[types.Room]:
         return await info.context.loaders.rooms.all()
 
-    @strawberry.field
-    async def channels(self, info: "NuInfo") -> list[types.Channel]:
-        session = info.context.session
-        result = await session.execute(select(models.Channel))
-        return [types.Channel.from_orm(r) for r in result.scalars().all()]
+    channels: list[types.Channel] = strawberry.field(resolver=get_channels)
 
     # @strawberry.field
     # async def channel(self, info: "NuInfo", id: strawberry.ID) -> types.Channel:

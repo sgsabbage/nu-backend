@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+from enum import auto
 from typing import TYPE_CHECKING, List
 from uuid import UUID as PythonUUID
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table, func, select
+from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
-from sqlalchemy.orm import column_property, relationship
+from sqlalchemy.orm import relationship
 from sqlalchemy_utils import PasswordType, force_auto_coercion
 
-from nu.db.base_class import Base
+from nu.db.base_class import AutoName, Base
 
 if TYPE_CHECKING:
     from nu.models.channel import Channel, ChannelCharacter
@@ -17,13 +19,27 @@ if TYPE_CHECKING:
 
 force_auto_coercion()
 
-__all__ = ["Player", "Character", "PlayerWindow", "PlayerWindowSetting"]
+__all__ = [
+    "Player",
+    "Character",
+    "Permission",
+    "PlayerWindow",
+    "PlayerWindowSetting",
+    "Role",
+]
 
 character_known_room = Table(
     "character_known_room",
     Base.metadata,
     Column("character_id", ForeignKey("character.id"), primary_key=True),
     Column("room_id", ForeignKey("room.id"), primary_key=True),
+)
+
+player_role = Table(
+    "player_role",
+    Base.metadata,
+    Column("player_id", ForeignKey("player.id"), primary_key=True),
+    Column("role_id", ForeignKey("role.id"), primary_key=True),
 )
 
 
@@ -39,7 +55,18 @@ class Player(Base):
         order_by="PlayerWindow.position",
         collection_class=ordering_list("position"),
     )
-    admin: bool
+    roles: list["Role"] = relationship("Role", uselist=True, secondary=player_role)
+
+
+class Permission(AutoName):
+    CHANNEL_CREATE = auto()
+    CHANNEL_UPDATE = auto()
+    CHANNEL_DELETE = auto()
+
+
+class Role(Base):
+    name = Column(String)
+    permissions: list[Permission] = Column(ARRAY(Enum(Permission)))
 
 
 class Character(Base):
@@ -47,8 +74,6 @@ class Character(Base):
     base_color = Column(String)
     player_id: PythonUUID = Column(ForeignKey("player.id"))
     player: Player = relationship("Player", back_populates="characters", uselist=False)
-    admin = Column(Boolean, default=False)
-
     known_rooms: list[Room] = relationship(
         "Room", uselist=True, secondary=character_known_room
     )
@@ -62,13 +87,6 @@ class Character(Base):
         "ChannelCharacter", back_populates="character", uselist=True
     )
     channels: list["Channel"] = association_proxy("character_channels", "channel")
-
-
-Player.admin = column_property(
-    select(func.bool_or(Character.admin))
-    .where(Character.player_id == Player.id)
-    .scalar_subquery()
-)  # type: ignore
 
 
 class PlayerWindowSetting(Base):

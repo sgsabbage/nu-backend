@@ -12,7 +12,9 @@ from nu.models import (
     ChannelMessage,
     Character,
     Exit,
+    Permission,
     Player,
+    Role,
     Room,
 )
 from nu.models.map import RoomStatus
@@ -25,15 +27,24 @@ def init_db() -> None:
     metadata.drop_all(engine)
     metadata.create_all(engine)
     to_add = []
-    p = Player(username="Ifrit", password="p123", email="notanemail@example.com")
+    r = Role(
+        name="Admin",
+        permissions=[
+            Permission.CHANNEL_CREATE,
+            Permission.CHANNEL_DELETE,
+            Permission.CHANNEL_UPDATE,
+        ],
+    )
+    p = Player(
+        username="Ifrit", password="p123", email="notanemail@example.com", roles=[r]
+    )
     c = Character(name="Afanc", player=p, base_color="#007ea8")
-    c3 = Character(name="Ifrit", player=p, admin=True, base_color="#804000")
+    c3 = Character(name="Ifrit", player=p, base_color="#804000")
     c2 = Character(name="Rathenhope", player=p)
-
     p2 = Player(username="Player", password="p123", email="notanemail2@example.com")
     c12 = Character(name="PC", player=p2, base_color="#7e00a8")
 
-    to_add.extend([p, c, c3, c2, p2, c12])
+    to_add.extend([p, c, c3, c2, p2, c12, r])
 
     pub = Channel(name="Public", description="The public channel")
     admin = Channel(name="Admin", description="The admin channel")

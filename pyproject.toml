@@ -19,7 +19,7 @@ python-jose = "^3.2.0"
 broadcaster = {git = "https://github.com/sgsabbage/broadcaster.git", rev = "8e27c4e"}
 promise = "^2.3"
 python-dateutil = "^2.8.2"
-strawberry-graphql = {extras = ["opentelemetry"], version = "^0.114.0"}
+strawberry-graphql = {extras = ["opentelemetry"], version = "^0.130.4"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.0"
@@ -56,3 +56,5 @@ include_trailing_comma = true
 force_grid_wrap = 0
 line_length = 88
 
+[tool.pyright]
+include = ["nu"]

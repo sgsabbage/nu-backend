@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -96,9 +98,20 @@ class UpdateRoomInput:
     description: str | None = None
 
 
+@strawberry.input
+class UpdateChannelInput:
+    name: str | None = None
+    description: str | None = None
+
+
 @strawberry.type
 class UpdateRoomResult:
     room: types.Room
+
+
+@strawberry.type
+class UpdateChannelResult:
+    channel: types.Channel
 
 
 @strawberry.type
@@ -246,7 +259,24 @@ class Mutation:
 
         return UpdateRoomResult(room=types.Room.from_orm(room))
 
+    @strawberry.mutation
+    async def update_channel(
+        self, info: "NuInfo", id: strawberry.ID, input: UpdateChannelInput
+    ) -> UpdateChannelResult:
+        session = info.context.session
+        channel: models.Channel = (
+            await session.execute(select(models.Channel).where(models.Channel.id == id))
+        ).scalar_one()
 
+        if input.description:
+            channel.description = input.description
+        if input.name:
+            channel.name = input.name
+
+        return UpdateChannelResult(channel=types.Channel.from_orm(channel))
+
+
+# @strawberry.schema_directive
 # class SendChannelMessage(graphene.Mutation):
 #     class Arguments:
 #         input = SendChannelMessageInput(required=True)

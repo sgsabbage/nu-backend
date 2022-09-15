@@ -41,7 +41,6 @@ class Player(BaseType[models.Player]):
     id: strawberry.ID
     username: str
     email: str
-    admin: bool
 
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list["Character"]:
