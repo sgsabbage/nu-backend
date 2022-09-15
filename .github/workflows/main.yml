@@ -71,10 +71,8 @@ jobs:
           name: test-results
           path: junit/test-results.xml
         if: ${{ always() }}
-      - uses: dorny/test-reporter@v1
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
         with:
-          artifact: test-results  
-          name: Pytest Tests                 
-          path: '*.xml'                    
-          reporter: jest-junit   
-        if: ${{ always() }}
+          report_paths: junit/*.xml
