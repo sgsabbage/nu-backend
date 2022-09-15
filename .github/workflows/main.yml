@@ -47,8 +47,6 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v3
-        with:
-          python-version: '3.10' 
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -66,5 +64,17 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install Nu
         run: poetry install --no-interaction
-      - run: poetry run pytest
-    
+      - run: poetry run pytest --junitxml=junit/test-results.xml
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: junit/test-results.xml
+        if: ${{ always() }}
+      - uses: dorny/test-reporter@v1
+        with:
+          artifact: test-results  
+          name: Pytest Tests                 
+          path: '*.xml'                    
+          reporter: jest-junit   
+        if: ${{ always() }}
