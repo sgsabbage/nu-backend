@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 
 import strawberry
@@ -48,7 +46,7 @@ async def broadcase_disconnect() -> None:
     await broadcast.disconnect()
 
 
-NuInfo = Info[Context, "Query"]
+NuInfo = Info[Context, Query]
 
 
 async def get_context(

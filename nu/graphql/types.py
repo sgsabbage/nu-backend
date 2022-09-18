@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import dataclasses
 import datetime
 from typing import TYPE_CHECKING, Generic, Optional, TypeVar
@@ -64,7 +62,7 @@ class Character(BaseType[models.Character]):
     base_color: str | None
 
     @strawberry.field
-    async def current_room(self, info: "NuInfo") -> Optional[Room]:
+    async def current_room(self, info: "NuInfo") -> Optional["Room"]:
         return await info.context.loaders.rooms.by_id(self._model.current_room_id)
 
 
@@ -74,7 +72,7 @@ class Area(BaseType[models.Area]):
     name: str
 
     @strawberry.field
-    async def rooms(self, info: "NuInfo") -> list[Room]:
+    async def rooms(self, info: "NuInfo") -> list["Room"]:
         return await info.context.loaders.rooms.by_area(self._model)
 
 
@@ -87,7 +85,7 @@ class Room(BaseType[models.Room]):
     y: int
 
     @strawberry.field
-    async def exits(self, info: "NuInfo") -> list[Exit]:
+    async def exits(self, info: "NuInfo") -> list["Exit"]:
         session = info.context.session
         result = await session.execute(
             select(models.Exit).filter(models.Exit.start_room_id == self.id)
@@ -129,7 +127,7 @@ class ChannelMessage(BaseType[models.ChannelMessage]):
         return await info.context.loaders.characters.by_id(self._model.character_id)
 
     @strawberry.field
-    async def channel(self, info: "NuInfo") -> Optional[Channel]:
+    async def channel(self, info: "NuInfo") -> Optional["Channel"]:
         return await info.context.loaders.channels.by_id(self._model.channel_id)
 
 

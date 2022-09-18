@@ -32,11 +32,14 @@ def init_db() -> None:
         permissions=[
             Permission.CHANNEL_CREATE,
             Permission.CHANNEL_DELETE,
-            Permission.CHANNEL_UPDATE,
         ],
     )
+    r2 = Role(
+        name="Channel Stuff",
+        permissions=[Permission.CHANNEL_DELETE, Permission.CHANNEL_UPDATE],
+    )
     p = Player(
-        username="Ifrit", password="p123", email="notanemail@example.com", roles=[r]
+        username="Ifrit", password="p123", email="notanemail@example.com", roles=[r, r2]
     )
     c = Character(name="Afanc", player=p, base_color="#007ea8")
     c3 = Character(name="Ifrit", player=p, base_color="#804000")
@@ -44,7 +47,7 @@ def init_db() -> None:
     p2 = Player(username="Player", password="p123", email="notanemail2@example.com")
     c12 = Character(name="PC", player=p2, base_color="#7e00a8")
 
-    to_add.extend([p, c, c3, c2, p2, c12, r])
+    to_add.extend([p, c, c3, c2, p2, c12, r, r2])
 
     pub = Channel(name="Public", description="The public channel")
     admin = Channel(name="Admin", description="The admin channel")

@@ -1,14 +1,22 @@
-from __future__ import annotations
-
 from enum import auto
 from typing import TYPE_CHECKING, List
 from uuid import UUID as PythonUUID
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy import (
+    Column,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    and_,
+    func,
+    select,
+)
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import column_property, relationship
 from sqlalchemy_utils import PasswordType, force_auto_coercion
 
 from nu.db.base_class import AutoName, Base
@@ -43,6 +51,17 @@ player_role = Table(
 )
 
 
+class Permission(AutoName):
+    CHANNEL_CREATE = auto()
+    CHANNEL_UPDATE = auto()
+    CHANNEL_DELETE = auto()
+
+
+class Role(Base):
+    name = Column(String)
+    permissions: list[Permission] = Column(ARRAY(Enum(Permission)))
+
+
 class Player(Base):
     username = Column(String)
     password: str = Column(PasswordType(schemes=["pbkdf2_sha512"]))
@@ -56,17 +75,21 @@ class Player(Base):
         collection_class=ordering_list("position"),
     )
     roles: list["Role"] = relationship("Role", uselist=True, secondary=player_role)
+    permissions: list["Permission"]
 
 
-class Permission(AutoName):
-    CHANNEL_CREATE = auto()
-    CHANNEL_UPDATE = auto()
-    CHANNEL_DELETE = auto()
+subq = (
+    select(Player.id, func.unnest(Role.permissions).label("permission"))
+    .distinct()
+    .where(and_(Player.id == player_role.c.player_id, Role.id == player_role.c.role_id))
+    .subquery()
+)
 
-
-class Role(Base):
-    name = Column(String)
-    permissions: list[Permission] = Column(ARRAY(Enum(Permission)))
+Player.permissions = column_property(
+    select(func.array_agg(subq.c.permission))
+    .where(Player.id == subq.c.id)
+    .scalar_subquery()
+)  # type: ignore
 
 
 class Character(Base):
@@ -74,12 +97,12 @@ class Character(Base):
     base_color = Column(String)
     player_id: PythonUUID = Column(ForeignKey("player.id"))
     player: Player = relationship("Player", back_populates="characters", uselist=False)
-    known_rooms: list[Room] = relationship(
+    known_rooms: list["Room"] = relationship(
         "Room", uselist=True, secondary=character_known_room
     )
 
     current_room_id: PythonUUID = Column(ForeignKey("room.id"))
-    current_room: Room = relationship(
+    current_room: "Room" = relationship(
         "Room", back_populates="characters", uselist=False
     )
 

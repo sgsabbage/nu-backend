@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-from graphql import GraphQLResolveInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.extensions import Extension
 from strawberry.utils.await_maybe import AwaitableOrValue

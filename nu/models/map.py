@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from enum import auto
 from typing import TYPE_CHECKING
 from uuid import UUID as PythonUUID
@@ -36,7 +34,7 @@ class Room(Base):
 
     status = Column(Enum(RoomStatus), default=RoomStatus.PRIVATE)
 
-    characters: list[Character] = relationship(
+    characters: list["Character"] = relationship(
         "Character", back_populates="current_room", uselist=True
     )
 
