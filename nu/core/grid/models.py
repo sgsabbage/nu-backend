@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 from nu.db.base_class import AutoName, Base
 
 if TYPE_CHECKING:
-    from nu.models import Character
+    from nu.core.player.models import Character
 
 __all__ = ["Area", "Room", "RoomStatus", "Exit"]
 

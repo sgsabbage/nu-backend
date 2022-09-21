@@ -3,8 +3,9 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.fastapi import BaseContext
 
-from .graphql.loaders import Loaders
-from .models import Player
+from nu.core.player.models import Player
+
+from .loaders import Loaders
 
 
 @dataclass

@@ -28,7 +28,7 @@ services:
       - /var/run/docker.sock:/var/run/docker-host.sock
 
     ports:
-      - "8000:8000"
+      - "7000:7000"
 
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity

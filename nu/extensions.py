@@ -4,7 +4,7 @@ from strawberry.utils.await_maybe import AwaitableOrValue
 
 from nu.context import Context, PlayerContext
 from nu.db.session import SessionLocal
-from nu.graphql.loaders import get_loaders
+from nu.loaders import get_loaders
 
 
 class TransactionExtension(Extension):

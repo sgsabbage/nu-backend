@@ -22,8 +22,8 @@ from sqlalchemy_utils import PasswordType, force_auto_coercion
 from nu.db.base_class import AutoName, Base
 
 if TYPE_CHECKING:
-    from nu.models.channel import Channel, ChannelCharacter
-    from nu.models.map import Room
+    from nu.core.channels.models import Channel, ChannelCharacter
+    from nu.core.grid.models import Room
 
 force_auto_coercion()
 

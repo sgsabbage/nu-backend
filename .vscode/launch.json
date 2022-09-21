@@ -13,7 +13,9 @@
                 "nu.main:app",
                 "--debug",
                 "--host",
-                "0.0.0.0"
+                "0.0.0.0",
+                "--port",
+                "7000"
             ],
             "jinja": true,
             "justMyCode": false

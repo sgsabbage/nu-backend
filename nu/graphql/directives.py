@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 import strawberry
 from strawberry.schema_directive import Location
 
-from nu.models.player import Permission
+from nu.core.player.models import Permission
 
 if TYPE_CHECKING:
     from nu.main import NuInfo

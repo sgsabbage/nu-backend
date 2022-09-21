@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 from nu.db.base_class import Base
 
 if TYPE_CHECKING:
-    from nu.models.player import Character
+    from nu.core.player.models import Character
 
 __all__ = ["Channel", "ChannelCharacter", "ChannelMessage"]
 
