@@ -1,5 +1,6 @@
 import strawberry
 
+from nu.core.grid.loaders import AreaLoader, RoomLoader
 from nu.info import NuInfo
 
 from .types import Area as AreaType
@@ -7,11 +8,11 @@ from .types import Room as RoomType
 
 
 async def get_rooms(info: "NuInfo") -> list[RoomType]:
-    return await info.context.loaders.rooms.all()
+    return await info.context.loaders.get_loader(RoomLoader).all()
 
 
 async def get_areas(info: "NuInfo") -> list[AreaType]:
-    return await info.context.loaders.areas.all()
+    return await info.context.loaders.get_loader(AreaLoader).all()
 
 
 @strawberry.type

@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 import strawberry
 from sqlalchemy import select
@@ -18,7 +19,11 @@ class Area(BaseType[models.Area]):
 
     @strawberry.field
     async def rooms(self, info: "NuInfo") -> list["Room"]:
-        return await info.context.loaders.rooms.by_area_id(self._model.id)
+        from nu.core.grid.loaders import RoomLoader
+
+        return await info.context.loaders.get_loader(RoomLoader).by_area_id(
+            self._model.id
+        )
 
 
 @strawberry.type
@@ -31,7 +36,11 @@ class Room(BaseType[models.Room]):
 
     @strawberry.field
     async def area(self, info: "NuInfo") -> Optional[Area]:
-        return await info.context.loaders.areas.by_id(self._model.area_id)
+        from nu.core.grid.loaders import AreaLoader
+
+        return await info.context.loaders.get_loader(AreaLoader).by_id(
+            self._model.area_id
+        )
 
     @strawberry.field
     async def exits(self, info: "NuInfo") -> list["Exit"]:
@@ -58,8 +67,66 @@ class Exit(BaseType[models.Exit]):
 
     @strawberry.field
     async def start_room(self, info: "NuInfo") -> Optional[Room]:
-        return await info.context.loaders.rooms.by_id(self._model.start_room_id)
+        from nu.core.grid.loaders import RoomLoader
+
+        return await info.context.loaders.get_loader(RoomLoader).by_id(
+            self._model.start_room_id
+        )
 
     @strawberry.field
     async def end_room(self, info: "NuInfo") -> Optional[Room]:
-        return await info.context.loaders.rooms.by_id(self._model.end_room_id)
+        from nu.core.grid.loaders import RoomLoader
+
+        return await info.context.loaders.get_loader(RoomLoader).by_id(
+            self._model.end_room_id
+        )
+
+
+@strawberry.input
+class UpdateRoomInput:
+    id: UUID
+
+    name: str | None = strawberry.UNSET
+    description: str | None = strawberry.UNSET
+    x: int | None = strawberry.UNSET
+    y: int | None = strawberry.UNSET
+
+
+@strawberry.type
+class UpdateRoomResult:
+    room: Room
+
+
+@strawberry.input
+class UpdateAreaInput:
+    id: UUID
+
+    name: str | None = strawberry.UNSET
+    description: str | None = strawberry.UNSET
+
+
+@strawberry.type
+class UpdateAreaResult:
+    area: Area
+
+
+@strawberry.input
+class MoveCharacterToRoomInput:
+    character_id: UUID
+    room_id: UUID
+
+
+@strawberry.type
+class MoveCharacterToRoomResult:
+    character: CharacterType
+
+
+@strawberry.input
+class MoveCharacterThroughExitInput:
+    character_id: UUID
+    exit_id: UUID
+
+
+@strawberry.type
+class MoveCharacterThroughExitResult:
+    character: CharacterType

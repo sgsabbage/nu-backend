@@ -1,10 +1,14 @@
+from typing import Any, Type
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.extensions import Extension
 from strawberry.utils.await_maybe import AwaitableOrValue
 
 from nu.context import Context, PlayerContext
+from nu.core.grid.loaders import AreaLoader
+from nu.core.player.loaders import CharacterLoader, PlayerLoader
 from nu.db.session import SessionLocal
-from nu.loaders import get_loaders
+from nu.loaders import BaseLoader, get_loaders
 
 
 class TransactionExtension(Extension):
@@ -13,8 +17,16 @@ class TransactionExtension(Extension):
         session = SessionLocal()
         await session.begin()
 
+        classes: list[Type[BaseLoader[Any, Any]]] = [
+            AreaLoader,
+            CharacterLoader,
+            PlayerLoader,
+        ]
+
         context = Context(
-            player=c.player, loaders=get_loaders(session, c.player), session=session
+            player=c.player,
+            loaders=get_loaders(session, c.player, classes),
+            session=session,
         )
         context.request = c.request
         context.background_tasks = c.background_tasks

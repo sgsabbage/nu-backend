@@ -1,4 +1,5 @@
 import os
+from heapq import merge
 
 import strawberry
 import uvicorn
@@ -13,7 +14,9 @@ from nu import api
 from nu.broadcast import broadcast
 from nu.context import PlayerContext
 from nu.core.channels.queries import Query as ChannelQuery
+from nu.core.grid.mutations import Mutation as GridMutation
 from nu.core.grid.queries import Query as GridQuery
+from nu.core.grid.subscriptions import Subscription as GridSubscription
 from nu.core.player.models import Player
 from nu.core.player.queries import Query as PlayerQuery
 from nu.deps import get_player
@@ -50,8 +53,12 @@ async def get_context(
 
 
 Query = merge_types("Query", (ChannelQuery, PlayerQuery, GridQuery))
+Mutation = merge_types("Mutation", (GridMutation,))
+Subscription = merge_types("Subscription", (GridSubscription,))
 schema = strawberry.Schema(
     Query,
+    mutation=Mutation,
+    subscription=Subscription,
     extensions=[TransactionExtension, OpenTelemetryExtension],
 )
 graphql_app = GraphQLRouter(schema=schema, context_getter=get_context)
@@ -59,7 +66,7 @@ graphql_app = GraphQLRouter(schema=schema, context_getter=get_context)
 
 def get_graphiql_response() -> HTMLResponse:
     with open(
-        os.path.dirname(os.path.abspath(__file__)) + "/static/graphiql.html"
+        os.path.dirname(os.path.abspath(__file__)) + "/static/playground.html"
     ) as f:
         html = f.read()
     return HTMLResponse(html)

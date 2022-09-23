@@ -21,7 +21,11 @@ class Player(BaseType[models.Player]):
 
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list["Character"]:
-        return await info.context.loaders.characters.by_player(self._model)
+        from nu.core.player.loaders import CharacterLoader
+
+        return await info.context.loaders.get_loader(CharacterLoader).by_player(
+            self._model
+        )
 
     @strawberry.field
     async def windows(self, info: "NuInfo") -> list["Window"]:
@@ -42,13 +46,21 @@ class Character(BaseType[CharacterModel]):
 
     @strawberry.field
     async def player(self, info: "NuInfo") -> Optional["Player"]:
-        return await info.context.loaders.players.by_id(self._model.player_id)
+        from nu.core.player.loaders import PlayerLoader
+
+        return await info.context.loaders.get_loader(PlayerLoader).by_id(
+            self._model.player_id
+        )
 
     @strawberry.field
     async def current_room(
         self, info: "NuInfo"
     ) -> Optional[Annotated["Room", strawberry.lazy("nu.core.grid.types")]]:
-        return await info.context.loaders.rooms.by_id(self._model.current_room_id)
+        from nu.core.grid.loaders import RoomLoader
+
+        return await info.context.loaders.get_loader(RoomLoader).by_id(
+            self._model.current_room_id
+        )
 
 
 @strawberry.type
@@ -69,7 +81,11 @@ class Window(BaseType[models.PlayerWindow]):
 
     @strawberry.field
     async def character(self, info: "NuInfo") -> Character | None:
-        return await info.context.loaders.characters.by_id(self._model.character_id)
+        from nu.core.player.loaders import CharacterLoader
+
+        return await info.context.loaders.get_loader(CharacterLoader).by_id(
+            self._model.character_id
+        )
 
     @strawberry.field
     async def settings(self, info: "NuInfo") -> list[WindowSetting]:

@@ -1,26 +1,23 @@
 import strawberry
-from sqlalchemy import select
 
 from nu.info import NuInfo
 
-from .models import Player
-from .types import Character as CharacterType
-from .types import Player as PlayerType
+from .loaders import CharacterLoader, PlayerLoader
+from .types import Character, Player
 
 
-async def get_current_player(info: "NuInfo") -> PlayerType:
-    session = info.context.session
-    result = await session.execute(
-        select(Player).where(Player.id == info.context.player.id)
+async def get_current_player(info: "NuInfo") -> Player | None:
+    assert info.context.player, "Not logged in"
+    return await info.context.loaders.get_loader(PlayerLoader).by_id(
+        info.context.player.id
     )
-    return PlayerType.from_orm(result.scalar_one())
 
 
-async def get_characters(info: "NuInfo") -> list[CharacterType]:
-    return await info.context.loaders.characters.all()
+async def get_characters(info: "NuInfo") -> list[Character]:
+    return await info.context.loaders.get_loader(CharacterLoader).all()
 
 
 @strawberry.type
 class Query:
-    me: PlayerType = strawberry.field(resolver=get_current_player)
-    characters: list[CharacterType] = strawberry.field(resolver=get_characters)
+    me: Player = strawberry.field(resolver=get_current_player)
+    characters: list[Character] = strawberry.field(resolver=get_characters)

@@ -10,24 +10,35 @@ import nu.types as types
 from nu.core.player.models import Player
 from nu.db.base_class import Base
 
+L = TypeVar("L", bound="BaseLoader")  # type: ignore
+
 
 class Loaders:
-    def __init__(self, session: AsyncSession, viewer: Player):
-
-        from nu.core.grid.loaders import AreaLoader, RoomLoader
-        from nu.core.player.loaders import CharacterLoader, PlayerLoader
+    def __init__(
+        self, session: AsyncSession, viewer: Player, loader_classes: list[Type[L]]
+    ):
+        self._loaders: list["BaseLoader[Any, Any]"] = []
 
         self.session = session
         self.viewer = viewer
-        self.areas = AreaLoader(session, viewer)
-        self.rooms = RoomLoader(session, viewer)
-        self.characters = CharacterLoader(session, viewer)
-        self.players = PlayerLoader(session, viewer)
-        # self.channels = ChannelLoader(session, viewer)
+
+        for cls in loader_classes:
+            self._loaders.append(cls(session, viewer))
+
+    def get_loader(self, t: Type[L]) -> L:
+        for loader in self._loaders:
+            if isinstance(loader, t):
+                break
+        else:
+            loader = t(self.session, self.viewer)
+            self._loaders.append(loader)
+        return loader
 
 
-def get_loaders(session: AsyncSession, viewer: Player) -> Loaders:
-    return Loaders(session, viewer)
+def get_loaders(
+    session: AsyncSession, viewer: Player, loader_classes: list[Type[L]]
+) -> Loaders:
+    return Loaders(session, viewer, loader_classes)
 
 
 M = TypeVar("M", bound=Base)
@@ -81,14 +92,3 @@ class BaseLoader(ABC, Generic[M, T]):
     @abstractmethod
     async def can_see(self, obj: M) -> bool:
         ...
-
-
-#
-
-
-# class ChannelLoader(BaseLoader[models.Channel, types.Channel]):
-#     model = models.Channel
-#     type = types.Channel
-
-#     async def can_see(self, obj: models.Channel) -> bool:
-#         return True

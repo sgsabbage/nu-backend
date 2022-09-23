@@ -12,26 +12,37 @@ from nu.graphql.pagination import Connection, Edge, PageInfo
 from nu.info import NuInfo
 from nu.types import BaseType
 
-from . import models
+from .models import Channel as ChannelModel
+from .models import ChannelMessage as ChannelMessageModel
 
 
 @strawberry.type
-class ChannelMessage(BaseType[models.ChannelMessage]):
+class ChannelMessage(BaseType[ChannelMessageModel]):
     id: strawberry.ID
     timestamp: datetime.datetime
     message: str
 
     @strawberry.field
     async def character(self, info: "NuInfo") -> Optional[CharacterType]:
-        return await info.context.loaders.characters.by_id(self._model.character_id)
+        from nu.core.player.loaders import CharacterLoader
+
+        return await info.context.loaders.get_loader(CharacterLoader).by_id(
+            self._model.character_id
+        )
 
     @strawberry.field
     async def channel(self, info: "NuInfo") -> Optional["Channel"]:
-        return await info.context.loaders.channels.by_id(self._model.channel_id)
+
+        from .loaders import ChannelLoader
+
+        return await info.context.loaders.get_loader(ChannelLoader).by_id(
+            self._model.channel_id
+        )
 
 
 @strawberry.type
-class Channel(BaseType[models.Channel]):
+class Channel(BaseType[ChannelModel]):
+
     id: strawberry.ID
     name: str
     description: str | None
@@ -49,31 +60,31 @@ class Channel(BaseType[models.Channel]):
             raise GraphQLError("Cannot specify first and last")
         session = info.context.session
 
-        stmt = select(models.ChannelMessage).filter(
-            models.ChannelMessage.channel_id == self.id
+        stmt = select(ChannelMessageModel).filter(
+            ChannelMessageModel.channel_id == self.id
         )
 
         bounds_stmnt = select(
-            func.min(models.ChannelMessage.timestamp),
-            func.max(models.ChannelMessage.timestamp),
-        ).where(models.ChannelMessage.channel_id == self.id)
+            func.min(ChannelMessageModel.timestamp),
+            func.max(ChannelMessageModel.timestamp),
+        ).where(ChannelMessageModel.channel_id == self.id)
         bounds = (await session.execute(bounds_stmnt)).first()
 
         if after is not None:
-            stmt = stmt.where(models.ChannelMessage.timestamp > parser.isoparse(after))
+            stmt = stmt.where(ChannelMessageModel.timestamp > parser.isoparse(after))
         if before is not None:
-            stmt = stmt.where(models.ChannelMessage.timestamp < parser.isoparse(before))
+            stmt = stmt.where(ChannelMessageModel.timestamp < parser.isoparse(before))
 
         if last is None:
-            stmt = stmt.order_by(models.ChannelMessage.timestamp)
+            stmt = stmt.order_by(ChannelMessageModel.timestamp)
         else:
-            stmt = stmt.order_by(desc(models.ChannelMessage.timestamp)).limit(last)
+            stmt = stmt.order_by(desc(ChannelMessageModel.timestamp)).limit(last)
 
         if first is not None:
             stmt = stmt.limit(first)
 
         result = await session.execute(stmt)
-        results: list[models.ChannelMessage] = result.scalars().all()
+        results: list[ChannelMessageModel] = result.scalars().all()
 
         if last:
             results.reverse()
@@ -117,7 +128,7 @@ class Channel(BaseType[models.Channel]):
         result = await session.execute(
             select(Character)
             .join(Character.character_channels)
-            .join(models.Channel)
-            .where(models.Channel.id == self.id)
+            .join(ChannelModel)
+            .where(ChannelModel.id == self.id)
         )
         return [CharacterType.from_orm(r) for r in result.scalars().all()]
