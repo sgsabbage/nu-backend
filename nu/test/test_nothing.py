@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nu.models import Player
+from nu.core.player.models import Player
 
 
 async def test_is_this_true(db: AsyncSession) -> None:

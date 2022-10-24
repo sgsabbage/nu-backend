@@ -1,5 +1,6 @@
+import importlib
 import os
-from heapq import merge
+import pkgutil
 
 import strawberry
 import uvicorn
@@ -9,6 +10,13 @@ from fastapi.responses import HTMLResponse
 from strawberry.extensions.tracing.opentelemetry import OpenTelemetryExtension
 from strawberry.fastapi import GraphQLRouter
 from strawberry.tools import merge_types
+
+import nu.plugins
+
+for _, name, is_pkg in pkgutil.iter_modules(
+    nu.plugins.__path__, nu.plugins.__name__ + "."
+):
+    importlib.import_module(name)
 
 from nu import api
 from nu.broadcast import broadcast
@@ -21,6 +29,7 @@ from nu.core.player.models import Player
 from nu.core.player.queries import Query as PlayerQuery
 from nu.deps import get_player
 from nu.extensions import TransactionExtension
+from nu.types import resolve_types
 
 # from nu.graphql.loaders import get_loaders
 
@@ -52,6 +61,7 @@ async def get_context(
     return PlayerContext(player=player)
 
 
+resolve_types()
 Query = merge_types("Query", (ChannelQuery, PlayerQuery, GridQuery))
 Mutation = merge_types("Mutation", (GridMutation,))
 Subscription = merge_types("Subscription", (GridSubscription,))

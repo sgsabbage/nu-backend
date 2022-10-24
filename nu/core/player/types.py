@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from nu.core.player.models import Character as CharacterModel
 from nu.info import NuInfo
-from nu.types import BaseType
+from nu.types import BaseType, deferred_type
 
 from . import models
 
@@ -13,11 +13,19 @@ if TYPE_CHECKING:
     from nu.core.grid.types import Room
 
 
-@strawberry.type
+@deferred_type
 class Player(BaseType[models.Player]):
     id: strawberry.ID
     username: str
     email: str
+
+    @strawberry.type(name="PlayerPlugins")
+    class Plugins:
+        count: int = 0
+
+    @strawberry.field
+    async def plugins(self) -> Plugins:
+        return self.Plugins()
 
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list["Character"]:
@@ -38,7 +46,7 @@ class Player(BaseType[models.Player]):
         return [Window.from_orm(w) for w in result.scalars().all()]
 
 
-@strawberry.type
+@deferred_type
 class Character(BaseType[CharacterModel]):
     id: strawberry.ID
     name: str
@@ -63,13 +71,13 @@ class Character(BaseType[CharacterModel]):
         )
 
 
-@strawberry.type
+@deferred_type
 class WindowSetting(BaseType[models.PlayerWindowSetting]):
     key: str
     value: str
 
 
-@strawberry.type
+@deferred_type
 class Window(BaseType[models.PlayerWindow]):
     id: strawberry.ID
     name: str

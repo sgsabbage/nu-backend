@@ -1,24 +1,22 @@
 import datetime
+import importlib
+import pkgutil
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import nu.plugins
+from nu.core.channels.models import Channel, ChannelCharacter, ChannelMessage
 from nu.core.config import settings
+from nu.core.grid.models import Area, Exit, Room, RoomStatus
+from nu.core.player.models import Character, Permission, Player, PlayerWindow, Role
 from nu.db.base_class import metadata
-from nu.models import (
-    Area,
-    Channel,
-    ChannelCharacter,
-    ChannelMessage,
-    Character,
-    Exit,
-    Permission,
-    Player,
-    Role,
-    Room,
-)
-from nu.models.map import RoomStatus
-from nu.models.player import PlayerWindow
+from nu.plugins.health import CharacterHealthModel, HasHealth
+
+for _, name, is_pkg in pkgutil.iter_modules(
+    nu.plugins.__path__, nu.plugins.__name__ + "."
+):
+    importlib.import_module(name)
 
 
 def init_db() -> None:
@@ -45,7 +43,10 @@ def init_db() -> None:
     c3 = Character(name="Ifrit", player=p, base_color="#804000")
     c2 = Character(name="Rathenhope", player=p)
     p2 = Player(username="Player", password="p123", email="notanemail2@example.com")
-    c12 = Character(name="PC", player=p2, base_color="#7e00a8")
+    assert isinstance(Character, HasHealth)
+    c12 = Character(
+        name="PC", player=p2, base_color="#7e00a8", health=CharacterHealthModel(hp=10)
+    )
 
     to_add.extend([p, c, c3, c2, p2, c12, r, r2])
 

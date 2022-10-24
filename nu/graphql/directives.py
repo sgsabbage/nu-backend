@@ -7,7 +7,7 @@ from strawberry.schema_directive import Location
 from nu.core.player.models import Permission
 
 if TYPE_CHECKING:
-    from nu.main import NuInfo
+    from nu.info import NuInfo
 
 
 class ResolvableDirective(ABC):

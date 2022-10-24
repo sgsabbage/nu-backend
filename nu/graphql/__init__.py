@@ -5,7 +5,7 @@ from strawberry.field import StrawberryField
 from nu.graphql.directives import ResolvableDirective
 
 if TYPE_CHECKING:
-    from nu.main import NuInfo
+    from nu.info import NuInfo
 
 
 def get_result(
