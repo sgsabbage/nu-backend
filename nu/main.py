@@ -12,12 +12,6 @@ from strawberry.fastapi import GraphQLRouter
 from strawberry.tools import merge_types
 
 import nu.plugins
-
-for _, name, is_pkg in pkgutil.iter_modules(
-    nu.plugins.__path__, nu.plugins.__name__ + "."
-):
-    importlib.import_module(name)
-
 from nu import api
 from nu.broadcast import broadcast
 from nu.context import PlayerContext
@@ -60,6 +54,11 @@ async def get_context(
 ) -> PlayerContext:
     return PlayerContext(player=player)
 
+
+for _, name, is_pkg in pkgutil.iter_modules(
+    nu.plugins.__path__, nu.plugins.__name__ + "."
+):
+    importlib.import_module(name)
 
 resolve_types()
 Query = merge_types("Query", (ChannelQuery, PlayerQuery, GridQuery))

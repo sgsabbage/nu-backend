@@ -1,8 +1,6 @@
 import strawberry
 
 from nu.core.channels.loaders import ChannelLoader
-from nu.core.player.models import Permission
-from nu.graphql.directives import HasPermission
 from nu.info import NuInfo
 
 from . import types

@@ -3,7 +3,9 @@ import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.future import Engine
 
 from alembic import context
 from nu.db.base import Base  # noqa
@@ -12,6 +14,7 @@ from nu.db.base import Base  # noqa
 # access to the values within the .ini file in use.
 config = context.config
 
+assert config.config_file_name
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
@@ -28,7 +31,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 
-def get_url():
+def get_url() -> str:
     user = os.getenv("POSTGRES_USER", "postgres")
     password = os.getenv("POSTGRES_PASSWORD", "")
     server = os.getenv("POSTGRES_SERVER", "db")
@@ -36,7 +39,7 @@ def get_url():
     return f"postgresql+asyncpg://{user}:{password}@{server}/{db}"
 
 
-def run_migrations_offline():
+def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
@@ -60,14 +63,14 @@ def run_migrations_offline():
         context.run_migrations()
 
 
-def do_run_migrations(connection):
+def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-async def run_migrations_online():
+async def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
@@ -76,16 +79,17 @@ async def run_migrations_online():
     """
 
     configuration = config.get_section(config.config_ini_section)
+    assert configuration
     configuration["sqlalchemy.url"] = get_url()
 
-    connectable = AsyncEngine(
-        engine_from_config(
-            configuration,
-            prefix="sqlalchemy.",
-            poolclass=pool.NullPool,
-            future=True,
-        )
+    engine = engine_from_config(
+        configuration,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+        future=True,
     )
+    assert isinstance(engine, Engine)
+    connectable = AsyncEngine(engine)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

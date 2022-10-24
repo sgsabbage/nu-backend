@@ -11,7 +11,8 @@ from nu.core.config import settings
 from nu.core.grid.models import Area, Exit, Room, RoomStatus
 from nu.core.player.models import Character, Permission, Player, PlayerWindow, Role
 from nu.db.base_class import metadata
-from nu.plugins.health import CharacterHealthModel, HasHealth
+from nu.plugins.health.models import CharacterHealth
+from nu.plugins.health.protocols import HasHealth
 
 for _, name, is_pkg in pkgutil.iter_modules(
     nu.plugins.__path__, nu.plugins.__name__ + "."
@@ -45,7 +46,10 @@ def init_db() -> None:
     p2 = Player(username="Player", password="p123", email="notanemail2@example.com")
     assert isinstance(Character, HasHealth)
     c12 = Character(
-        name="PC", player=p2, base_color="#7e00a8", health=CharacterHealthModel(hp=10)
+        name="PC",
+        player=p2,
+        base_color="#7e00a8",
+        health=CharacterHealth(total_hp=10, current_hp=5),
     )
 
     to_add.extend([p, c, c3, c2, p2, c12, r, r2])
