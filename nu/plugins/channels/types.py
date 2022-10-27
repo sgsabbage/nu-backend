@@ -7,13 +7,14 @@ from graphql import GraphQLError
 from sqlalchemy import desc, func, select
 
 import nu
-from nu.core.channels.models import Channel as ChannelModel
-from nu.core.channels.models import ChannelMessage as ChannelMessageModel
 from nu.core.player.models import Character
 from nu.core.player.types import Character as CharacterType
 from nu.graphql.pagination import Connection, Edge, PageInfo
 from nu.info import NuInfo
 from nu.types import BaseType
+
+from .models import Channel as ChannelModel
+from .models import ChannelMessage as ChannelMessageModel
 
 
 @nu.type()

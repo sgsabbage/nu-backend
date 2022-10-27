@@ -14,7 +14,6 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
 from sqlalchemy.orm import column_property, relationship
 from sqlalchemy_utils import PasswordType, force_auto_coercion
@@ -22,7 +21,6 @@ from sqlalchemy_utils import PasswordType, force_auto_coercion
 from nu.db.base_class import AutoName, Base
 
 if TYPE_CHECKING:
-    from nu.core.channels.models import Channel, ChannelCharacter
     from nu.core.grid.models import Room
 
 force_auto_coercion()
@@ -105,11 +103,6 @@ class Character(Base):
     current_room: "Room" = relationship(
         "Room", back_populates="characters", uselist=False
     )
-
-    character_channels: list["ChannelCharacter"] = relationship(
-        "ChannelCharacter", back_populates="character", uselist=True
-    )
-    channels: list["Channel"] = association_proxy("character_channels", "channel")
 
 
 class PlayerWindowSetting(Base):

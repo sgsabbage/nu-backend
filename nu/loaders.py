@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Coroutine, Generic, Optional, Type, TypeVar
+from typing import Any, Callable, Coroutine, Generic, Optional, Protocol, Type, TypeVar
 from uuid import UUID
 
 from sqlalchemy import select
@@ -8,7 +8,6 @@ from strawberry.dataloader import DataLoader
 
 import nu.types as types
 from nu.core.player.models import Player
-from nu.db.base_class import Base
 
 L = TypeVar("L", bound="BaseLoader")  # type: ignore
 
@@ -41,7 +40,11 @@ def get_loaders(
     return Loaders(session, viewer, loader_classes)
 
 
-M = TypeVar("M", bound=Base)
+class HasID(Protocol):
+    id: Any
+
+
+M = TypeVar("M", bound=HasID)
 T = TypeVar("T", bound=types.BaseType)  # type: ignore
 
 

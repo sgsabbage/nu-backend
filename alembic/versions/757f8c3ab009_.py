@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 6442f0101004
+Revision ID: 757f8c3ab009
 Revises: 
-Create Date: 2022-10-25 15:27:00.206350
+Create Date: 2022-10-27 15:46:59.507226
 
 """
 import sqlalchemy as sa
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "6442f0101004"
+revision = "757f8c3ab009"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,19 +30,6 @@ def upgrade() -> None:
         ),
         sa.Column("name", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_area")),
-        schema="core",
-    )
-    op.create_table(
-        "channel",
-        sa.Column(
-            "id",
-            postgresql.UUID(as_uuid=True),
-            server_default=sa.text("uuid_generate_v4()"),
-            nullable=False,
-        ),
-        sa.Column("name", sa.String(), nullable=True),
-        sa.Column("description", sa.String(), nullable=True),
-        sa.PrimaryKeyConstraint("id", name=op.f("pk_channel")),
         schema="core",
     )
     op.create_table(
@@ -173,51 +160,6 @@ def upgrade() -> None:
         schema="core",
     )
     op.create_table(
-        "channel_character",
-        sa.Column("channel_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("character_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["channel_id"],
-            ["core.channel.id"],
-            name=op.f("fk_channel_character_channel_id_channel"),
-        ),
-        sa.ForeignKeyConstraint(
-            ["character_id"],
-            ["core.character.id"],
-            name=op.f("fk_channel_character_character_id_character"),
-        ),
-        sa.PrimaryKeyConstraint(
-            "channel_id", "character_id", name=op.f("pk_channel_character")
-        ),
-        schema="core",
-    )
-    op.create_table(
-        "channel_message",
-        sa.Column(
-            "id",
-            postgresql.UUID(as_uuid=True),
-            server_default=sa.text("uuid_generate_v4()"),
-            nullable=False,
-        ),
-        sa.Column("message", sa.String(), nullable=True),
-        sa.Column("character_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("channel_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("system", sa.Boolean(), nullable=True),
-        sa.Column("timestamp", postgresql.TIMESTAMP(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["channel_id"],
-            ["core.channel.id"],
-            name=op.f("fk_channel_message_channel_id_channel"),
-        ),
-        sa.ForeignKeyConstraint(
-            ["character_id"],
-            ["core.character.id"],
-            name=op.f("fk_channel_message_character_id_character"),
-        ),
-        sa.PrimaryKeyConstraint("id", name=op.f("pk_channel_message")),
-        schema="core",
-    )
-    op.create_table(
         "character_known_room",
         sa.Column("character_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("room_id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -293,14 +235,11 @@ def downgrade() -> None:
     op.drop_table("player_window_setting", schema="core")
     op.drop_table("player_window", schema="core")
     op.drop_table("character_known_room", schema="core")
-    op.drop_table("channel_message", schema="core")
-    op.drop_table("channel_character", schema="core")
     op.drop_table("exit", schema="core")
     op.drop_table("character", schema="core")
     op.drop_table("room", schema="core")
     op.drop_table("player_role", schema="core")
     op.drop_table("role", schema="core")
     op.drop_table("player", schema="core")
-    op.drop_table("channel", schema="core")
     op.drop_table("area", schema="core")
     # ### end Alembic commands ###

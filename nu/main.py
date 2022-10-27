@@ -15,7 +15,6 @@ import nu.plugins
 from nu import api
 from nu.broadcast import broadcast
 from nu.context import PlayerContext
-from nu.core.channels.queries import Query as ChannelQuery
 from nu.core.config import settings
 from nu.core.grid.mutations import Mutation as GridMutation
 from nu.core.grid.queries import Query as GridQuery
@@ -56,17 +55,24 @@ async def get_context(
     return PlayerContext(player=player)
 
 
+query_types = [PlayerQuery, GridQuery]
+mutation_types = [GridMutation]
+subscription_types = [GridSubscription]
 for _, name, is_pkg in pkgutil.iter_modules(
     nu.plugins.__path__, nu.plugins.__name__ + "."
 ):
-    plugin = importlib.import_module(name)
+    plugin_module = importlib.import_module(name)
+    plugin = plugin_module.Plugin
     if plugin.NAME in settings.plugins:
-        plugin.install_plugin()
+        plugin.install()
+        query_types.extend(plugin.queries)
+        query_types.extend(plugin.mutations)
+        query_types.extend(plugin.subscriptions)
 
 resolve_types()
-Query = merge_types("Query", (ChannelQuery, PlayerQuery, GridQuery))
-Mutation = merge_types("Mutation", (GridMutation,))
-Subscription = merge_types("Subscription", (GridSubscription,))
+Query = merge_types("Query", tuple(query_types))
+Mutation = merge_types("Mutation", tuple(mutation_types))
+Subscription = merge_types("Subscription", tuple(subscription_types))
 schema = strawberry.Schema(
     Query,
     mutation=Mutation,

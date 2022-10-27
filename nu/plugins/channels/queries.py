@@ -1,9 +1,9 @@
 import strawberry
 
-from nu.core.channels.loaders import ChannelLoader
 from nu.info import NuInfo
 
 from . import types
+from .loaders import ChannelLoader
 
 
 async def get_channels(info: "NuInfo") -> list[types.Channel]:

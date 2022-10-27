@@ -2,23 +2,27 @@ from sqlalchemy.orm import relationship
 
 import nu.core.player.types as coretypes
 from nu.core.player.models import Character as CharacterModel
+from nu.plugin import BasePlugin
 from nu.plugins.magic.models import CharacterMagic
 from nu.plugins.magic.types import get_magic
 
-NAME = "magic"
-VERSION = "0.2.0"
 
+class Plugin(BasePlugin):
 
-def install_plugin() -> None:
-    setattr(
-        CharacterModel,
-        "magic",
-        relationship(
-            CharacterMagic,
-            back_populates="character",
-            lazy="selectin",
-            uselist=False,
-        ),
-    )
+    NAME = "magic"
+    VERSION = "0.2.0"
 
-    coretypes.Character.add_extra_field("magic", get_magic)
+    @classmethod
+    def install(cls) -> None:
+        setattr(
+            CharacterModel,
+            "magic",
+            relationship(
+                CharacterMagic,
+                back_populates="character",
+                lazy="selectin",
+                uselist=False,
+            ),
+        )
+
+        coretypes.Character.add_extra_field("magic", get_magic)
