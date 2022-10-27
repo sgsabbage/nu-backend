@@ -30,7 +30,7 @@ class Mutation:
 
         assert room, "Room not found"
 
-        room_model = room._model
+        room_model = room.model
 
         for f in ("name", "description", "x", "y"):
             if (val := getattr(input, f)) is not strawberry.UNSET:
@@ -50,7 +50,7 @@ class Mutation:
 
         assert area, "Area not found"
 
-        area_model = area._model
+        area_model = area.model
 
         for f in ("name", "description"):
             if (val := getattr(input, f)) is not strawberry.UNSET:
@@ -73,10 +73,10 @@ class Mutation:
         assert character, "Character not found"
         assert room, "Room not found"
 
-        character._model.current_room = room._model
+        character.model.current_room = room.model
         await info.context.session.flush()
         return MoveCharacterToRoomResult(
-            character=CharacterType.from_orm(character._model)
+            character=CharacterType.from_orm(character.model)
         )
 
     @strawberry.mutation
@@ -91,5 +91,5 @@ class Mutation:
         assert character, "Character not found"
 
         return MoveCharacterThroughExitResult(
-            character=CharacterType.from_orm(character._model)
+            character=CharacterType.from_orm(character.model)
         )

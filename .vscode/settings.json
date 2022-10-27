@@ -13,9 +13,10 @@
     ],
     "[python]": {
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true
+            "source.organizeImports": true,
         },
         "editor.formatOnSave": true,
+        
     },
     "files.exclude": {
         "**/__pycache__": true
@@ -25,16 +26,8 @@
     },
     "python.languageServer": "Pylance",
     "python.analysis.packageIndexDepths": [
-        [
-            "sqlalchemy",
-            4,
-            false
-        ],
-        [
-            "nu",
-            5,
-            false
-        ]
+        { "name": "sqlalchemy", "depth": 4 },
+        { "name": "nu", "depth": 5}
     ],
     "python.terminal.activateEnvInCurrentTerminal": true,
 }

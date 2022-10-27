@@ -4,15 +4,14 @@ from uuid import UUID
 import strawberry
 from sqlalchemy import select
 
+from nu.core.grid import models
 from nu.core.player.models import Character
 from nu.core.player.types import Character as CharacterType
 from nu.info import NuInfo
-from nu.types import BaseType
-
-from . import models
+from nu.types import BaseType, deferred_type
 
 
-@strawberry.type
+@deferred_type()
 class Area(BaseType[models.Area]):
     id: strawberry.ID
     name: str
@@ -22,11 +21,11 @@ class Area(BaseType[models.Area]):
         from nu.core.grid.loaders import RoomLoader
 
         return await info.context.loaders.get_loader(RoomLoader).by_area_id(
-            self._model.id
+            self.model.id
         )
 
 
-@strawberry.type
+@deferred_type()
 class Room(BaseType[models.Room]):
     id: strawberry.ID
     name: str
@@ -39,7 +38,7 @@ class Room(BaseType[models.Room]):
         from nu.core.grid.loaders import AreaLoader
 
         return await info.context.loaders.get_loader(AreaLoader).by_id(
-            self._model.area_id
+            self.model.area_id
         )
 
     @strawberry.field
@@ -59,7 +58,7 @@ class Room(BaseType[models.Room]):
         return [CharacterType.from_orm(c) for c in result.scalars().all()]
 
 
-@strawberry.type
+@deferred_type()
 class Exit(BaseType[models.Exit]):
     id: strawberry.ID
     name: str | None
@@ -70,7 +69,7 @@ class Exit(BaseType[models.Exit]):
         from nu.core.grid.loaders import RoomLoader
 
         return await info.context.loaders.get_loader(RoomLoader).by_id(
-            self._model.start_room_id
+            self.model.start_room_id
         )
 
     @strawberry.field
@@ -78,7 +77,7 @@ class Exit(BaseType[models.Exit]):
         from nu.core.grid.loaders import RoomLoader
 
         return await info.context.loaders.get_loader(RoomLoader).by_id(
-            self._model.end_room_id
+            self.model.end_room_id
         )
 
 

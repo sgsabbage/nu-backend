@@ -59,12 +59,6 @@ async def subscribe(
 #     return ChannelMessage.from_orm(result.scalar_one())
 
 
-# async def sub_room_status(event: Event, session: AsyncSession) -> Room:
-#     room_id = event.message
-#     result = await session.execute(select(models.Room).where(models.Room.id == room_id))
-#     return Room.from_orm(result.scalar_one())
-
-
 # @strawberry.type
 # class Subscription:
 #     @strawberry.subscription

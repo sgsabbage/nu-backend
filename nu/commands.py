@@ -1,6 +1,7 @@
 import datetime
 import importlib
 import pkgutil
+from typing import Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,7 +26,7 @@ def init_db() -> None:
     engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
     metadata.drop_all(engine)
     metadata.create_all(engine)
-    to_add = []
+    to_add: list[Any] = []
     r = Role(
         name="Admin",
         permissions=[

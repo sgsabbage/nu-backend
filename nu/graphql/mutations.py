@@ -168,10 +168,12 @@
 #         p.windows.insert(0, p.windows.pop(index))
 #         p.windows.reorder()
 #         await session.flush()
-#         return WindowOrderResult(windows=[types.Window.from_orm(w) for w in p.windows])
+#         return WindowOrderResult(windows=[types.Window.from_orm(w) for w i
+# n p.windows])
 
 #     @strawberry.mutation
-#     async def send_window_to_back(self, info: "NuInfo", id: UUID) -> WindowOrderResult:
+#     async def send_window_to_back(self, info: "NuInfo", id: UUID) ->
+# WindowOrderResult:
 
 #         session = info.context.session
 #         p = await get_player_with_windows(info.context.player.id, session)
@@ -182,7 +184,8 @@
 #         p.windows.append(p.windows.pop(index))
 #         p.windows.reorder()
 #         await session.flush()
-#         return WindowOrderResult(windows=[types.Window.from_orm(w) for w in p.windows])
+#         return WindowOrderResult(windows=[types.Window.from_orm(w) for w in
+#  p.windows])
 
 #     @strawberry.mutation
 #     async def send_channel_message(
@@ -220,7 +223,8 @@
 #     ) -> UpdateChannelResult:
 #         session = info.context.session
 #         channel: models.Channel = (
-#             await session.execute(select(models.Channel).where(models.Channel.id == id))
+#             await session.execute(select(models.Channel).where(models.Channel.
+# id == id))
 #         ).scalar_one()
 
 #         if input.description:

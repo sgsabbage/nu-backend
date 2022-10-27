@@ -4,3 +4,4 @@ cov.xml
 .coverage
 coverage
 .venv
+nu.yaml

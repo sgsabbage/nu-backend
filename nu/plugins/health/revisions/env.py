@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.future import Engine
 
 from alembic import context
-from nu.db.base import Base  # noqa
+from nu.plugins.health.models import Base  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -29,6 +29,13 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+
+def include_name(name: str, type_: str, parent_names: list[str]) -> bool:
+    if type_ == "schema":
+        return bool(name == Base.metadata.schema)
+    else:
+        return True
 
 
 def get_url() -> str:
@@ -58,6 +65,8 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         version_table_schema=Base.metadata.schema,
+        include_name=include_name,
+        include_schemas=True,
     )
 
     with context.begin_transaction():
@@ -69,6 +78,8 @@ def do_run_migrations(connection: Connection) -> None:
         connection=connection,
         target_metadata=target_metadata,
         version_table_schema=Base.metadata.schema,
+        include_name=include_name,
+        include_schemas=True,
     )
 
     with context.begin_transaction():
@@ -93,6 +104,7 @@ async def run_migrations_online() -> None:
         poolclass=pool.NullPool,
         future=True,
     )
+
     assert isinstance(engine, Engine)
     connectable = AsyncEngine(engine)
 

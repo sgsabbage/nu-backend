@@ -1,6 +1,7 @@
 import secrets
 from typing import Any, Dict, List, Optional, Union
 
+import yaml
 from pydantic import AnyHttpUrl, AnyUrl, BaseSettings, validator
 
 
@@ -28,6 +29,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     API_COOKIE_KEY: str = "nu_api"
 
+    plugins: list[str]
+
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> str:
         if isinstance(v, str):
@@ -46,4 +49,7 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-settings = Settings()
+with open("nu.yaml") as f:
+    config = yaml.safe_load(f)
+
+settings = Settings(**config)

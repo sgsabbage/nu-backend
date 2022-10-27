@@ -3,17 +3,17 @@ from typing import TYPE_CHECKING, Annotated, Optional
 import strawberry
 from sqlalchemy import select
 
+import nu
+from nu.core.player import models
 from nu.core.player.models import Character as CharacterModel
 from nu.info import NuInfo
-from nu.types import BaseType, deferred_type
-
-from . import models
+from nu.types import BaseType
 
 if TYPE_CHECKING:
     from nu.core.grid.types import Room
 
 
-@strawberry.type
+@nu.type()
 class Player(BaseType[models.Player]):
     id: strawberry.ID
     username: str
@@ -24,7 +24,7 @@ class Player(BaseType[models.Player]):
         from nu.core.player.loaders import CharacterLoader
 
         return await info.context.loaders.get_loader(CharacterLoader).by_player(
-            self._model
+            self.model
         )
 
     @strawberry.field
@@ -38,7 +38,7 @@ class Player(BaseType[models.Player]):
         return [Window.from_orm(w) for w in result.scalars().all()]
 
 
-@deferred_type()
+@nu.type()
 class Character(BaseType[CharacterModel]):
     id: strawberry.ID
     name: str
@@ -49,7 +49,7 @@ class Character(BaseType[CharacterModel]):
         from nu.core.player.loaders import PlayerLoader
 
         return await info.context.loaders.get_loader(PlayerLoader).by_id(
-            self._model.player_id
+            self.model.player_id
         )
 
     @strawberry.field
@@ -59,17 +59,17 @@ class Character(BaseType[CharacterModel]):
         from nu.core.grid.loaders import RoomLoader
 
         return await info.context.loaders.get_loader(RoomLoader).by_id(
-            self._model.current_room_id
+            self.model.current_room_id
         )
 
 
-@strawberry.type
+@nu.type()
 class WindowSetting(BaseType[models.PlayerWindowSetting]):
     key: str
     value: str
 
 
-@strawberry.type
+@nu.type()
 class Window(BaseType[models.PlayerWindow]):
     id: strawberry.ID
     name: str
@@ -84,7 +84,7 @@ class Window(BaseType[models.PlayerWindow]):
         from nu.core.player.loaders import CharacterLoader
 
         return await info.context.loaders.get_loader(CharacterLoader).by_id(
-            self._model.character_id
+            self.model.character_id
         )
 
     @strawberry.field

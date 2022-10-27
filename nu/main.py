@@ -16,6 +16,7 @@ from nu import api
 from nu.broadcast import broadcast
 from nu.context import PlayerContext
 from nu.core.channels.queries import Query as ChannelQuery
+from nu.core.config import settings
 from nu.core.grid.mutations import Mutation as GridMutation
 from nu.core.grid.queries import Query as GridQuery
 from nu.core.grid.subscriptions import Subscription as GridSubscription
@@ -58,7 +59,9 @@ async def get_context(
 for _, name, is_pkg in pkgutil.iter_modules(
     nu.plugins.__path__, nu.plugins.__name__ + "."
 ):
-    importlib.import_module(name)
+    plugin = importlib.import_module(name)
+    if plugin.NAME in settings.plugins:
+        plugin.install_plugin()
 
 resolve_types()
 Query = merge_types("Query", (ChannelQuery, PlayerQuery, GridQuery))

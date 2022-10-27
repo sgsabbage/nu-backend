@@ -6,17 +6,17 @@ from dateutil import parser
 from graphql import GraphQLError
 from sqlalchemy import desc, func, select
 
+import nu
+from nu.core.channels.models import Channel as ChannelModel
+from nu.core.channels.models import ChannelMessage as ChannelMessageModel
 from nu.core.player.models import Character
 from nu.core.player.types import Character as CharacterType
 from nu.graphql.pagination import Connection, Edge, PageInfo
 from nu.info import NuInfo
 from nu.types import BaseType
 
-from .models import Channel as ChannelModel
-from .models import ChannelMessage as ChannelMessageModel
 
-
-@strawberry.type
+@nu.type()
 class ChannelMessage(BaseType[ChannelMessageModel]):
     id: strawberry.ID
     timestamp: datetime.datetime
@@ -27,7 +27,7 @@ class ChannelMessage(BaseType[ChannelMessageModel]):
         from nu.core.player.loaders import CharacterLoader
 
         return await info.context.loaders.get_loader(CharacterLoader).by_id(
-            self._model.character_id
+            self.model.character_id
         )
 
     @strawberry.field
@@ -36,11 +36,11 @@ class ChannelMessage(BaseType[ChannelMessageModel]):
         from .loaders import ChannelLoader
 
         return await info.context.loaders.get_loader(ChannelLoader).by_id(
-            self._model.channel_id
+            self.model.channel_id
         )
 
 
-@strawberry.type
+@nu.type()
 class Channel(BaseType[ChannelModel]):
 
     id: strawberry.ID
