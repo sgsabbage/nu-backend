@@ -3,7 +3,7 @@ on: [push]
 jobs:
   lint:
     runs-on: ubuntu-latest
-    container: python:3.10
+    container: python:3.11
     steps:
       - uses: actions/checkout@v3
       - name: Install Poetry
@@ -27,7 +27,7 @@ jobs:
   
   test:
     runs-on: ubuntu-latest
-    container: python:3.10
+    container: python:3.11
     env:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
