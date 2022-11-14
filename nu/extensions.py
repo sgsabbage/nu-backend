@@ -5,8 +5,7 @@ from strawberry.extensions import Extension
 from strawberry.utils.await_maybe import AwaitableOrValue
 
 from nu.context import Context, PlayerContext
-from nu.core.grid.loaders import AreaLoader
-from nu.core.player.loaders import CharacterLoader, PlayerLoader
+from nu.core.loaders import CharacterLoader, PlayerLoader
 from nu.db.session import SessionLocal
 from nu.loaders import BaseLoader, get_loaders
 
@@ -18,7 +17,6 @@ class TransactionExtension(Extension):
         await session.begin()
 
         classes: list[Type[BaseLoader[Any, Any]]] = [
-            AreaLoader,
             CharacterLoader,
             PlayerLoader,
         ]

@@ -1,4 +1,9 @@
 class BasePlugin:
-    queries: list[object] = []
-    mutations: list[object] = []
-    subscriptions: list[object] = []
+    NAME: str
+    queries: list[type] = []
+    mutations: list[type] = []
+    subscriptions: list[type] = []
+
+    @classmethod
+    def install(cls) -> None:
+        pass

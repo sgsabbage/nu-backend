@@ -1,18 +1,16 @@
-"""empty message
+"""Base channel revision
 
-Revision ID: 64fdec93ba19
-Revises: 
-Create Date: 2022-10-27 15:48:32.237035
+Revision ID: ce0afa34bb39
+Revises:
+Create Date: 2022-11-14 11:32:08.227267
 
 """
 import sqlalchemy as sa
-import sqlalchemy_utils
-from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "64fdec93ba19"
+revision = "ce0afa34bb39"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,19 +22,19 @@ def upgrade() -> None:
         "channel",
         sa.Column(
             "id",
-            postgresql.UUID(as_uuid=True),
+            sa.UUID(),
             server_default=sa.text("uuid_generate_v4()"),
             nullable=False,
         ),
-        sa.Column("name", sa.String(), nullable=True),
-        sa.Column("description", sa.String(), nullable=True),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("description", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_channel")),
         schema="plugin_channels",
     )
     op.create_table(
         "channel_character",
-        sa.Column("channel_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("character_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("channel_id", sa.UUID(), nullable=False),
+        sa.Column("character_id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(
             ["channel_id"],
             ["plugin_channels.channel.id"],
@@ -56,15 +54,15 @@ def upgrade() -> None:
         "channel_message",
         sa.Column(
             "id",
-            postgresql.UUID(as_uuid=True),
+            sa.UUID(),
             server_default=sa.text("uuid_generate_v4()"),
             nullable=False,
         ),
-        sa.Column("message", sa.String(), nullable=True),
-        sa.Column("character_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("channel_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("system", sa.Boolean(), nullable=True),
-        sa.Column("timestamp", postgresql.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column("message", sa.String(), nullable=False),
+        sa.Column("character_id", sa.UUID(), nullable=False),
+        sa.Column("channel_id", sa.UUID(), nullable=False),
+        sa.Column("timestamp", sa.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column("system", sa.Boolean(), nullable=False),
         sa.ForeignKeyConstraint(
             ["channel_id"],
             ["plugin_channels.channel.id"],

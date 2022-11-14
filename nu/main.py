@@ -16,13 +16,11 @@ from nu import api
 from nu.broadcast import broadcast
 from nu.context import PlayerContext
 from nu.core.config import settings
-from nu.core.grid.mutations import Mutation as GridMutation
-from nu.core.grid.queries import Query as GridQuery
-from nu.core.grid.subscriptions import Subscription as GridSubscription
-from nu.core.player.models import Player
-from nu.core.player.queries import Query as PlayerQuery
+from nu.core.models import Player
+from nu.core.queries import Query as CoreQuery
 from nu.deps import get_player
 from nu.extensions import TransactionExtension
+from nu.plugin import BasePlugin
 from nu.types import resolve_types
 
 # from nu.graphql.loaders import get_loaders
@@ -55,24 +53,30 @@ async def get_context(
     return PlayerContext(player=player)
 
 
-query_types = [PlayerQuery, GridQuery]
-mutation_types = [GridMutation]
-subscription_types = [GridSubscription]
+query_types: list[type] = [CoreQuery]
+mutation_types: list[type] = []
+subscription_types: list[type] = []
 for _, name, is_pkg in pkgutil.iter_modules(
     nu.plugins.__path__, nu.plugins.__name__ + "."
 ):
     plugin_module = importlib.import_module(name)
-    plugin = plugin_module.Plugin
+    plugin: BasePlugin = plugin_module.Plugin
     if plugin.NAME in settings.plugins:
         plugin.install()
         query_types.extend(plugin.queries)
-        query_types.extend(plugin.mutations)
-        query_types.extend(plugin.subscriptions)
+        mutation_types.extend(plugin.mutations)
+        subscription_types.extend(plugin.subscriptions)
 
 resolve_types()
 Query = merge_types("Query", tuple(query_types))
-Mutation = merge_types("Mutation", tuple(mutation_types))
-Subscription = merge_types("Subscription", tuple(subscription_types))
+Mutation = None
+if mutation_types:
+    Mutation = merge_types("Mutation", tuple(mutation_types))
+
+Subscription = None
+if subscription_types:
+    Subscription = merge_types("Subscription", tuple(subscription_types))
+
 schema = strawberry.Schema(
     Query,
     mutation=Mutation,

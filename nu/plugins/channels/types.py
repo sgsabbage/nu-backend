@@ -7,10 +7,11 @@ from graphql import GraphQLError
 from sqlalchemy import desc, func, select
 
 import nu
-from nu.core.player.models import Character
-from nu.core.player.types import Character as CharacterType
+from nu.core.models import Character
+from nu.core.types import Character as CharacterType
 from nu.graphql.pagination import Connection, Edge, PageInfo
 from nu.info import NuInfo
+from nu.plugins.channels.protocols import CharacterWithChannels
 from nu.types import BaseType
 
 from .models import Channel as ChannelModel
@@ -25,7 +26,7 @@ class ChannelMessage(BaseType[ChannelMessageModel]):
 
     @strawberry.field
     async def character(self, info: "NuInfo") -> Optional[CharacterType]:
-        from nu.core.player.loaders import CharacterLoader
+        from nu.core.loaders import CharacterLoader
 
         return await info.context.loaders.get_loader(CharacterLoader).by_id(
             self.model.character_id
@@ -85,10 +86,10 @@ class Channel(BaseType[ChannelModel]):
             stmt = stmt.limit(first)
 
         result = await session.execute(stmt)
-        results: list[ChannelMessageModel] = result.scalars().all()
+        results = result.scalars().all()
 
         if last:
-            results.reverse()
+            results = list(reversed(results))
 
         has_next_page = False
         has_previous_page = False
@@ -126,6 +127,7 @@ class Channel(BaseType[ChannelModel]):
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list[CharacterType]:
         session = info.context.session
+        assert isinstance(Character, CharacterWithChannels)
         result = await session.execute(
             select(Character)
             .join(Character.character_channels)

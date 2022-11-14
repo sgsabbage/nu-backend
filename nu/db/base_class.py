@@ -1,11 +1,18 @@
 import re
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any, ClassVar
+from uuid import UUID as PythonUUID
 
-from sqlalchemy import Column, MetaData
+from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import as_declarative, declared_attr
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    MappedAsDataclass,
+    declared_attr,
+    mapped_column,
+)
 from sqlalchemy.sql.expression import text
+from typing_extensions import Annotated
 
 convention = {
     "ix": "ix_%(column_0_label)s",
@@ -16,26 +23,32 @@ convention = {
 }
 metadata = MetaData(naming_convention=convention, schema="core")
 
-
-@as_declarative(metadata=metadata)
-class Base:
-    id: Any
-    id = Column(
+pkuuid = Annotated[
+    PythonUUID,
+    mapped_column(
         UUID(as_uuid=True),
         server_default=text("uuid_generate_v4()"),
         primary_key=True,
-    )
-    __name__: str
+        init=False,
+    ),
+]
 
-    # Generate __tablename__ automatically, converting CamelCase class names to
-    # snake_case table names
-    @declared_attr
+
+class BaseMixin:
+    if TYPE_CHECKING:
+        __name__: ClassVar[str]
+
+    @declared_attr.directive
     def __tablename__(cls) -> str:
         """Convert CamelCase class name to underscores_between_words
         table name."""
         name = cls.__name__
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
+
+class Base(MappedAsDataclass, DeclarativeBase, BaseMixin):
+    metadata = metadata
 
 
 class AutoName(Enum):

@@ -23,7 +23,4 @@ def get_result(
     if self.base_resolver:
         return self.base_resolver(*args, **kwargs)
 
-    return self.default_resolver(source, self.python_name)  # type: ignore
-
-
-setattr(StrawberryField, "get_result", get_result)
+    return self.default_resolver(source, self.python_name)

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 import strawberry
 from strawberry.schema_directive import Location
 
-from nu.core.player.models import Permission
+from nu.core.models import Permission
 
 if TYPE_CHECKING:
     from nu.info import NuInfo
@@ -27,8 +27,9 @@ class HasPermission(ResolvableDirective):
         player = info.context.player
         if not player:
             raise Exception("Not logged in")
-        for permission in self.permissions:
-            print(player.permissions)
-            print(type(player.permissions[0]))
-            if permission not in player.permissions:
-                raise Exception(f"Missing permission {permission}")
+        return
+        # for permission in self.permissions:
+        #     print(player.permissions)
+        #     print(type(player.permissions[0]))
+        #     if permission not in player.permissions:
+        #         raise Exception(f"Missing permission {permission}")

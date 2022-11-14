@@ -13,8 +13,7 @@ from broadcaster import Event
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nu.broadcast import broadcast
-from nu.core.grid.loaders import AreaLoader
-from nu.core.player.loaders import CharacterLoader, PlayerLoader
+from nu.core.loaders import CharacterLoader, PlayerLoader
 from nu.db.session import SessionLocal
 from nu.loaders import BaseLoader, get_loaders
 
@@ -34,7 +33,6 @@ async def subscribe(
             async for event in subscriber:
                 async with SessionLocal.begin() as session:
                     classes: list[Type[BaseLoader[Any, Any]]] = [
-                        AreaLoader,
                         CharacterLoader,
                         PlayerLoader,
                     ]

@@ -1,16 +1,13 @@
-from typing import TYPE_CHECKING, Annotated, Optional
+from typing import Optional
 
 import strawberry
 from sqlalchemy import select
 
 import nu
-from nu.core.player import models
-from nu.core.player.models import Character as CharacterModel
+from nu.core import models
+from nu.core.models import Character as CharacterModel
 from nu.info import NuInfo
 from nu.types import BaseType
-
-if TYPE_CHECKING:
-    from nu.core.grid.types import Room
 
 
 @nu.type()
@@ -21,7 +18,7 @@ class Player(BaseType[models.Player]):
 
     @strawberry.field
     async def characters(self, info: "NuInfo") -> list["Character"]:
-        from nu.core.player.loaders import CharacterLoader
+        from nu.core.loaders import CharacterLoader
 
         return await info.context.loaders.get_loader(CharacterLoader).by_player(
             self.model
@@ -46,20 +43,10 @@ class Character(BaseType[CharacterModel]):
 
     @strawberry.field
     async def player(self, info: "NuInfo") -> Optional["Player"]:
-        from nu.core.player.loaders import PlayerLoader
+        from nu.core.loaders import PlayerLoader
 
         return await info.context.loaders.get_loader(PlayerLoader).by_id(
             self.model.player_id
-        )
-
-    @strawberry.field
-    async def current_room(
-        self, info: "NuInfo"
-    ) -> Optional[Annotated["Room", strawberry.lazy("nu.core.grid.types")]]:
-        from nu.core.grid.loaders import RoomLoader
-
-        return await info.context.loaders.get_loader(RoomLoader).by_id(
-            self.model.current_room_id
         )
 
 
@@ -81,7 +68,7 @@ class Window(BaseType[models.PlayerWindow]):
 
     @strawberry.field
     async def character(self, info: "NuInfo") -> Character | None:
-        from nu.core.player.loaders import CharacterLoader
+        from nu.core.loaders import CharacterLoader
 
         return await info.context.loaders.get_loader(CharacterLoader).by_id(
             self.model.character_id

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nu.core.config import settings
-from nu.core.player.models import Player
+from nu.core.models import Player
 from nu.db.session import SessionLocal
 
 

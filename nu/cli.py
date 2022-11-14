@@ -28,7 +28,8 @@ def list() -> None:
     for _, name, is_pkg in pkgutil.iter_modules(
         nu.plugins.__path__, nu.plugins.__name__ + "."
     ):
-        plugin = importlib.import_module(name)
+        plugin_module = importlib.import_module(name)
+        plugin = plugin_module.Plugin
         table.append(
             {
                 "name": plugin.NAME,
@@ -53,7 +54,8 @@ def install(plugin: str) -> None:
         nu.plugins.__path__, nu.plugins.__name__ + "."
     ):
         mod = importlib.import_module(name)
-        if mod.NAME == plugin:
+        plugin_obj = mod.Plugin
+        if plugin_obj.NAME == plugin:
             break
     else:
         raise click.ClickException(f"Plugin {plugin} not found")
@@ -80,7 +82,8 @@ def uninstall(plugin: str) -> None:
         nu.plugins.__path__, nu.plugins.__name__ + "."
     ):
         mod = importlib.import_module(name)
-        if mod.NAME == plugin:
+        plugin_obj = mod.Plugin
+        if plugin_obj.NAME == plugin:
             break
     else:
         raise click.ClickException(f"Plugin {plugin} not found")

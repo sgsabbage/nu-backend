@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from nu.core.config import settings
-from nu.core.player.models import Player
+from nu.core.models import Player
 from nu.deps import get_session
 
 router = APIRouter()

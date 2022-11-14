@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.dataloader import DataLoader
 
 import nu.types as types
-from nu.core.player.models import Player
+from nu.core.models import Player
 
 L = TypeVar("L", bound="BaseLoader")  # type: ignore
 

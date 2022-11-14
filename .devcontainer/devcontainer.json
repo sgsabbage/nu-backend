@@ -9,7 +9,8 @@
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
 		"python.defaultInterpreterPath": "/workspace/.venv/bin/python",
-		"python.terminal.activateEnvInCurrentTerminal": true
+		"python.terminal.activateEnvInCurrentTerminal": true,
+		"python.linting.pylintEnabled": false
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
